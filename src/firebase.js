@@ -1,8 +1,3 @@
-// ==============================================================================
-// FILE: src/firebase.js
-//
-// This file contains the Firebase initialization and exports.
-// ==============================================================================
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
