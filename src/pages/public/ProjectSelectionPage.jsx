@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../../firebase';
-import { collection, doc, getDoc, getDocs, onSnapshot, query, where } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
 
 const ProjectSelectionPage = () => {
   const [projects, setProjects] = useState([]);
@@ -16,22 +16,36 @@ const ProjectSelectionPage = () => {
     }
 
     const fetchUserAndProjects = async () => {
-      const usersRef = collection(db, "users");
-      const q = query(usersRef, where("email", "==", user.email));
-      const userQuerySnapshot = await getDocs(q);
+      try {
+        const usersRef = collection(db, "users");
+        const q = query(usersRef, where("email", "==", user.email));
+        const userQuerySnapshot = await getDocs(q);
 
-      if (!userQuerySnapshot.empty) {
-        const userData = userQuerySnapshot.docs[0].data();
-        const projectIds = userData.mappedProjects || [];
+        if (!userQuerySnapshot.empty) {
+          const userData = userQuerySnapshot.docs[0].data();
+          const projectIds = userData.mappedProjects || [];
 
-        if (projectIds.length > 0) {
-          const projectsRef = collection(db, "projects");
-          const projectsQuery = query(projectsRef, where("__name__", "in", projectIds));
-          const projectsSnapshot = await getDocs(projectsQuery);
-          setProjects(projectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+          if (projectIds.length > 0) {
+            // Fetch each project document individually using getDoc
+            const projectPromises = projectIds.map(id => getDoc(doc(db, "projects", id)));
+            const projectSnapshots = await Promise.all(projectPromises);
+            
+            const userProjects = projectSnapshots
+              .filter(docSnap => docSnap.exists())
+              .map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+              
+            setProjects(userProjects);
+          }
         }
+      } catch (error) {
+          console.error("Error fetching user projects:", error);
+          // Redirect to no-projects page on permission error
+          if (error.code === 'permission-denied') {
+              navigate('/no-projects');
+          }
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchUserAndProjects();
