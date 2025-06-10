@@ -1,11 +1,9 @@
 import React from 'react';
-import { Routes, Route, Outlet } from 'react-router-dom';
-// Import your admin pages
+import { Routes, Route } from 'react-router-dom';
 import AdminDashboardPage from '../pages/admin/AdminDashboardPage.jsx';
 import ProjectManagementPage from '../pages/admin/ProjectManagementPage.jsx';
 import UserManagementPage from '../pages/admin/UserManagementPage.jsx';
 import SettingsPage from '../pages/admin/SettingsPage.jsx';
-// Import shared layout components
 import Sidebar from '../components/common/Sidebar.jsx';
 import Header from '../components/common/Header.jsx';
 
@@ -18,12 +16,11 @@ const AdminLayout = () => {
     ];
 
     return (
-        <div className="flex h-screen bg-gray-100 dark:bg-gray-900 font-sans">
+        <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
             <Sidebar navItems={adminNavItems} />
             <div className="flex-1 flex flex-col overflow-hidden">
                 <Header />
-                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 dark:bg-gray-900 p-6">
-                    {/* Nested routes will render here */}
+                <main className="flex-1 overflow-x-hidden overflow-y-auto p-6">
                     <Routes>
                         <Route path="dashboard" element={<AdminDashboardPage />} />
                         <Route path="projects" element={<ProjectManagementPage />} />
