@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       if (user) {
-        // Check if the user is an admin
+        // Check if the user's UID is in the 'admins' collection
         const adminDocRef = doc(db, 'admins', user.uid);
         const adminDocSnap = await getDoc(adminDocRef);
         setIsAdmin(adminDocSnap.exists());
