@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth, db } from '../firebase';
+import { auth, db } from './firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
 const AuthContext = createContext();
@@ -16,7 +16,6 @@ export const AuthProvider = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       if (user) {
-        // Check if the user's UID is in the 'admins' collection
         const adminDocRef = doc(db, 'admins', user.uid);
         const adminDocSnap = await getDoc(adminDocRef);
         setIsAdmin(adminDocSnap.exists());
