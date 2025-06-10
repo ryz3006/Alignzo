@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../../firebase';
-import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where } from 'firebase/firestore';
 
 const ProjectSelectionPage = () => {
   const [projects, setProjects] = useState([]);
@@ -17,12 +17,12 @@ const ProjectSelectionPage = () => {
 
     const fetchUserAndProjects = async () => {
       try {
-        const usersRef = collection(db, "users");
-        const q = query(usersRef, where("email", "==", user.email));
-        const userQuerySnapshot = await getDocs(q);
+        // Use a direct 'get' on the user's document using their email as the ID
+        const userDocRef = doc(db, "users", user.email);
+        const userDocSnap = await getDoc(userDocRef);
 
-        if (!userQuerySnapshot.empty) {
-          const userData = userQuerySnapshot.docs[0].data();
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data();
           const projectIds = userData.mappedProjects || [];
 
           if (projectIds.length > 0) {
@@ -35,14 +35,18 @@ const ProjectSelectionPage = () => {
               .map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
               
             setProjects(userProjects);
+          } else {
+             // If user exists but has no projects
+             navigate('/no-projects');
           }
+        } else {
+            // If the user document doesn't exist at all
+            navigate('/no-projects');
         }
       } catch (error) {
           console.error("Error fetching user projects:", error);
-          // Redirect to no-projects page on permission error
-          if (error.code === 'permission-denied') {
-              navigate('/no-projects');
-          }
+          // Redirect to no-projects page on any error, including permission denied
+          navigate('/no-projects');
       } finally {
         setLoading(false);
       }
