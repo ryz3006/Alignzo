@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './contexts/AuthContext';
+import { useAuth } from './contexts/AuthContext.jsx';
 
 import AdminLayout from './layouts/AdminLayout.jsx';
 import PublicLayout from './layouts/PublicLayout.jsx';
@@ -10,13 +10,15 @@ import NoProjectsPage from './pages/public/NoProjectsPage.jsx';
 
 // --- Protected Route Components ---
 const AdminRoute = ({ children }) => {
-  const { currentUser, isAdmin } = useAuth();
+  const { currentUser, isAdmin, loading } = useAuth();
+  if (loading) return null; // Or a loading spinner
   if (!currentUser) return <Navigate to="/" replace />;
   return isAdmin ? children : <Navigate to="/unauthorized" replace />;
 };
 
 const PublicRoute = ({ children }) => {
-  const { currentUser, isAdmin } = useAuth();
+  const { currentUser, isAdmin, loading } = useAuth();
+  if (loading) return null; // Or a loading spinner
   if (!currentUser) return <Navigate to="/" replace />;
   return !isAdmin ? children : <Navigate to="/admin/dashboard" replace />;
 };
