@@ -143,10 +143,11 @@ const AdminDashboardPage = () => {
         if (!selectedProject) return [];
         const projectUsers = users.filter(u => (u.mappedProjects || []).includes(selectedProjectId));
         const getSortOrder = (designation) => {
-            const order = [...designations].reverse().indexOf(designation);
+            const order = designations.indexOf(designation); // Use normal index order
             return order === -1 ? Infinity : order;
         };
-        const sortedUsers = projectUsers.sort((a, b) => getSortOrder(a.designation) - getSortOrder(b.designation));
+        // Sort by designation index in descending order (highest index/lowest level first)
+        const sortedUsers = projectUsers.sort((a, b) => getSortOrder(b.designation) - getSortOrder(a.designation));
 
         const matrix = [];
         if (selectedProject.commonContactEmail || selectedProject.commonContactNumber) {
