@@ -36,7 +36,7 @@ body {
 .neumorph-outset {
   background: var(--light-bg);
   border-radius: 20px;
-  box-shadow: 8px 8px 15px var(--light-shadow-dark), -8px -8px 15px var(--light-shadow-light);
+  box-shadow: 6px 6px 12px var(--light-shadow-dark), -6px -6px 12px var(--light-shadow-light);
 }
 .neumorph-inset {
   border-radius: 12px;
@@ -50,7 +50,7 @@ html.dark body {
 }
 html.dark .neumorph-outset {
   background: var(--dark-bg);
-  box-shadow: 8px 8px 15px var(--dark-shadow-dark), -8px -8px 15px var(--dark-shadow-light);
+  box-shadow: 6px 6px 12px var(--dark-shadow-dark), -6px -6px 12px var(--dark-shadow-light);
 }
 html.dark .neumorph-inset {
   box-shadow: inset 5px 5px 10px var(--dark-shadow-dark), inset -5px -5px 10px var(--dark-shadow-light);
@@ -77,6 +77,7 @@ html.dark .text-primary { color: var(--dark-primary); }
 html.dark .btn:active {
   box-shadow: inset 4px 4px 8px var(--dark-shadow-dark), inset -4px -4px 8px var(--dark-shadow-light) !important;
 }
+
 .btn-primary {
   color: white;
   background-color: var(--light-primary);
@@ -84,23 +85,76 @@ html.dark .btn:active {
 html.dark .btn-primary {
   background-color: var(--dark-primary);
 }
-.btn-primary:hover {
-  background-color: var(--light-primary-dark);
-}
-html.dark .btn-primary:hover {
-  background-color: var(--dark-primary-dark);
-}
 
 .input-field {
   width: 100%;
   padding: 12px 16px;
   border: none;
   background-color: transparent;
-  color: var(--light-text);
 }
-html.dark .input-field {
-    color: var(--dark-text);
-}
-.input-field:focus {
+.input-field:focus { outline: none; }
+html.dark .input-field { color: var(--dark-text); }
+
+/* --- NEW STYLES FOR LOGIN TABS --- */
+.tab-btn {
+  flex: 1;
+  position: relative;
+  padding: 1em;
+  border: 3px ridge var(--light-primary);
   outline: none;
+  background-color: transparent;
+  color: var(--light-text-strong);
+  transition: 1s;
+  border-radius: 0.3em;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+html.dark .tab-btn {
+  border-color: var(--dark-primary);
+  color: var(--dark-text-strong);
+}
+
+.tab-btn::after {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 3%;
+  width: 95%;
+  height: 40%;
+  background-color: var(--light-bg);
+  transition: 0.5s;
+  transform-origin: center;
+}
+html.dark .tab-btn::after {
+  background-color: var(--dark-bg);
+}
+
+.tab-btn::before {
+  content: "";
+  transform-origin: center;
+  position: absolute;
+  top: 80%;
+  left: 3%;
+  width: 95%;
+  height: 40%;
+  background-color: var(--light-bg);
+  transition: 0.5s;
+}
+html.dark .tab-btn::before {
+  background-color: var(--dark-bg);
+}
+
+.tab-btn:hover::before, .tab-btn:hover::after,
+.tab-btn.active::before, .tab-btn.active::after {
+  transform: scale(0);
+}
+
+.tab-btn:hover, .tab-btn.active {
+  box-shadow: inset 0px 0px 25px var(--light-primary-dark);
+  color: var(--light-primary);
+}
+html.dark .tab-btn:hover, html.dark .tab-btn.active {
+  box-shadow: inset 0px 0px 25px var(--dark-primary-dark);
+  color: var(--dark-primary);
 }
