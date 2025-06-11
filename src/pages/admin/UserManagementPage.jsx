@@ -28,15 +28,17 @@ const MultiSelectDropdown = ({ options, selected, onSelectionChange, placeholder
                 <span>&#9662;</span>
             </button>
             {isOpen && (
-                <div className="neumorph-outset" style={{position: 'absolute', zIndex: 20, width: '100%', marginTop: '0.5rem', maxHeight: '240px', overflowY: 'auto', borderRadius: '12px'}}>
-                    <input 
-                        type="text"
-                        placeholder="Search projects..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="input-field"
-                        style={{padding: '0.75rem', borderBottom: '2px solid var(--light-bg)'}}
-                    />
+                <div className="neumorph-outset" style={{position: 'absolute', zIndex: 60, width: '100%', marginTop: '0.5rem', maxHeight: '240px', overflowY: 'auto', borderRadius: '12px'}}>
+                    <div className="neumorph-inset" style={{padding: '0.25rem', borderRadius: '0', borderTopLeftRadius: '12px', borderTopRightRadius: '12px' }}>
+                        <input 
+                            type="text"
+                            placeholder="Search projects..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="input-field"
+                            style={{padding: '0.75rem', borderBottom: '2px solid var(--light-bg)'}}
+                        />
+                    </div>
                     {filteredOptions.map(option => (
                         <div key={option.value} onClick={() => handleToggleOption(option.value)} style={{padding: '0.75rem 1rem', cursor: 'pointer', display: 'flex', alignItems: 'center'}}>
                            <input 
@@ -121,7 +123,6 @@ const UserManagementPage = () => {
   const handleAddUser = async () => {
       if (!currentUser.email || !currentUser.displayName) return alert("Email and Full Name are required.");
       
-      // Check for unique displayName
       const nameQuery = query(collection(db, "users"), where("displayName", "==", currentUser.displayName));
       const nameSnap = await getDocs(nameQuery);
       if(!nameSnap.empty) return alert("A user with this display name already exists.");
@@ -299,7 +300,7 @@ const UserManagementPage = () => {
       
       {isModalOpen && currentUser && (
         <div style={{position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem'}}>
-          <div className="neumorph-outset" style={{padding: '2rem', width: '100%', maxWidth: '600px', position: 'relative'}}>
+          <div className="neumorph-outset" style={{padding: '2rem', width: '100%', maxWidth: '600px', position: 'relative', maxHeight: '90vh', overflowY: 'auto'}}>
             <button onClick={() => setIsModalOpen(false)} className="btn neumorph-outset" style={{position: 'absolute', top: '1rem', right: '1rem', borderRadius: '50%', padding: '0.5rem', width: '40px', height: '40px'}}>&times;</button>
             <h2 style={{fontSize: '1.5rem', fontWeight: '700', marginBottom: '2rem'}} className="text-strong">{isEditing ? 'Edit User' : 'Add New User'}</h2>
             <form onSubmit={handleFormSubmit} style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
