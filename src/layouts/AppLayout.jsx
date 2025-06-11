@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import AdminDashboardPage from '../pages/admin/AdminDashboardPage.jsx';
 import ProjectManagementPage from '../pages/admin/ProjectManagementPage.jsx';
@@ -11,12 +11,13 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 
 const AppLayout = () => {
     const { isAdmin } = useAuth();
+    const [isSidebarOpen, setSidebarOpen] = useState(false);
 
     return (
-        <div style={{display: 'flex', height: '100vh'}}>
-            <Sidebar />
+        <div style={{display: 'flex', height: '100vh', backgroundColor: 'var(--light-bg)'}} className="dark:bg-[var(--dark-bg)]">
+            <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
             <div style={{flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden'}}>
-                <Header />
+                <Header onMenuClick={() => setSidebarOpen(true)} />
                 <main style={{flex: 1, overflowX: 'hidden', overflowY: 'auto', padding: '1.5rem'}}>
                     <Routes>
                         {isAdmin ? (
