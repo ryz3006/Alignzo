@@ -39,7 +39,7 @@ const Sidebar = ({ isMobileOpen, setMobileOpen }) => {
             <div style={{height: '3rem', margin: '0.5rem 0 2rem 0', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                 <img src={isMinimized ? LogoOnly : LogoWithName} alt="Alignzo Logo" style={{height: '2.5rem', transition: 'all 0.3s'}} />
             </div>
-            <nav style={{flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: 1rem}}>
+            <nav style={{flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1rem'}}>
                 {navItems.map(item => (
                     <NavLink
                         key={item.label}
