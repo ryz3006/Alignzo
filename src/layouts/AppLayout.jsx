@@ -30,7 +30,7 @@ const AppLayout = () => {
                         ) : (
                             <>
                                 <Route path="dashboard" element={<PublicDashboardPage />} />
-                                {/* Add other public routes here */}
+                                {/* ...other public routes... */}
                             </>
                         )}
                     </Routes>
