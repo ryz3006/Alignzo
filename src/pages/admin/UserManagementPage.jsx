@@ -29,15 +29,14 @@ const MultiSelectDropdown = ({ options, selected, onSelectionChange, placeholder
             </button>
             {isOpen && (
                 <div className="neumorph-outset" style={{position: 'absolute', zIndex: 20, width: '100%', marginTop: '0.5rem', maxHeight: '240px', overflowY: 'auto', borderRadius: '12px'}}>
-                    <div className="neumorph-inset" style={{padding: '0.25rem', borderRadius: '0', borderTopLeftRadius: '12px', borderTopRightRadius: '12px' }}>
-                        <input 
-                            type="text"
-                            placeholder="Search projects..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="input-field"
-                        />
-                    </div>
+                    <input 
+                        type="text"
+                        placeholder="Search projects..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="input-field"
+                        style={{padding: '0.75rem', borderBottom: '2px solid var(--light-bg)'}}
+                    />
                     {filteredOptions.map(option => (
                         <div key={option.value} onClick={() => handleToggleOption(option.value)} style={{padding: '0.75rem 1rem', cursor: 'pointer', display: 'flex', alignItems: 'center'}}>
                            <input 
@@ -65,20 +64,27 @@ const UserManagementPage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [reportingToFilter, setReportingToFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   
   const projectOptions = useMemo(() => projects.map(p => ({ label: p.name, value: p.id })), [projects]);
   const projectMap = useMemo(() => projects.reduce((acc, p) => ({ ...acc, [p.id]: p.name }), {}), [projects]);
   
-  const defaultNewUser = { email: '', contactNumber: '', designation: designations.length > 0 ? designations[0] : '', reportingTo: '', mappedProjects: [] };
+  const defaultNewUser = { email: '', displayName: '', contactNumber: '', designation: designations.length > 0 ? designations[0] : '', reportingTo: '', mappedProjects: [] };
 
   useEffect(() => {
-    const unsubUsers = onSnapshot(collection(db, "users"), snap => { setUsers(snap.docs.map(d => ({id: d.id, ...d.data()}))); setLoading(false); });
+    const unsubUsers = onSnapshot(collection(db, "users"), snap => {
+        const usersData = snap.docs.map(d => ({id: d.id, ...d.data()}));
+        const getSortOrder = (designation) => designations.indexOf(designation);
+        usersData.sort((a, b) => getSortOrder(a.designation) - getSortOrder(b.designation));
+        setUsers(usersData);
+        setLoading(false);
+    });
     const unsubProjects = onSnapshot(collection(db, "projects"), snap => setProjects(snap.docs.map(d => ({id: d.id, ...d.data()}))));
     const unsubDesignations = onSnapshot(doc(db, 'settings', 'designations'), d => setDesignations(d.exists() ? d.data().list : []));
     return () => { unsubUsers(); unsubProjects(); unsubDesignations(); };
-  }, []);
+  }, [designations]);
   
   const getAllSubordinates = (userId, allUsers) => {
     let subordinates = [];
@@ -113,19 +119,25 @@ const UserManagementPage = () => {
   const handleFormSubmit = async (e) => { e.preventDefault(); isEditing ? await handleEditUser() : await handleAddUser(); };
 
   const handleAddUser = async () => {
-      if (!currentUser.email) return alert("Email is required.");
+      if (!currentUser.email || !currentUser.displayName) return alert("Email and Full Name are required.");
+      
+      // Check for unique displayName
+      const nameQuery = query(collection(db, "users"), where("displayName", "==", currentUser.displayName));
+      const nameSnap = await getDocs(nameQuery);
+      if(!nameSnap.empty) return alert("A user with this display name already exists.");
+
       try {
         await setDoc(doc(db, "users", currentUser.email), {
             email: currentUser.email,
+            displayName: currentUser.displayName,
             contactNumber: currentUser.contactNumber || '',
-            displayName: currentUser.email.split('@')[0],
             designation: currentUser.designation,
             reportingTo: currentUser.reportingTo,
             mappedProjects: currentUser.mappedProjects,
             isAdmin: false,
             createdAt: serverTimestamp()
         });
-
+        
         const tempNewUser = { id: currentUser.email, ...currentUser };
         const managers = getAllManagers(tempNewUser.id, [...users, tempNewUser]);
         
@@ -170,6 +182,7 @@ const UserManagementPage = () => {
         const batch = writeBatch(db);
 
         batch.update(userRef, {
+            displayName: currentUser.displayName,
             contactNumber: currentUser.contactNumber,
             designation: currentUser.designation,
             reportingTo: currentUser.reportingTo,
@@ -220,7 +233,10 @@ const UserManagementPage = () => {
     setCurrentUser(prev => ({ ...prev, mappedProjects: selection }));
   }
 
-  const filteredUsers = users.filter(u => (u.displayName || u.email).toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredUsers = users.filter(u => 
+      ((u.displayName || u.email).toLowerCase().includes(searchTerm.toLowerCase())) &&
+      (reportingToFilter ? u.reportingTo === reportingToFilter : true)
+  );
   const paginatedUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
 
@@ -231,12 +247,18 @@ const UserManagementPage = () => {
            <div className="neumorph-inset" style={{padding: '0.25rem', borderRadius: '12px', flexGrow: 1}}>
              <input
               type="text"
-              placeholder="Search users by name or email..."
+              placeholder="Search users..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-field"
               style={{minWidth: '250px'}}
             />
+           </div>
+           <div className="neumorph-inset" style={{padding: '0.25rem', borderRadius: '12px'}}>
+             <select onChange={(e) => setReportingToFilter(e.target.value)} value={reportingToFilter} className="input-field">
+                <option value="">Filter by Manager...</option>
+                {users.map(u => <option key={u.id} value={u.id}>{u.displayName || u.email}</option>)}
+             </select>
            </div>
           <button onClick={openAddUserModal} className="btn neumorph-outset" style={{color: '#28a745', fontWeight: '600'}}>+ Add User</button>
         </div>
@@ -282,6 +304,7 @@ const UserManagementPage = () => {
             <h2 style={{fontSize: '1.5rem', fontWeight: '700', marginBottom: '2rem'}} className="text-strong">{isEditing ? 'Edit User' : 'Add New User'}</h2>
             <form onSubmit={handleFormSubmit} style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
                 <div className="neumorph-inset"><input type="email" name="email" value={currentUser.email} onChange={handleUserInputChange} placeholder="Email" required className="input-field" disabled={isEditing}/></div>
+                <div className="neumorph-inset"><input type="text" name="displayName" value={currentUser.displayName || ''} onChange={handleUserInputChange} placeholder="Full Name" required className="input-field"/></div>
                 <div className="neumorph-inset"><input type="text" name="contactNumber" value={currentUser.contactNumber || ''} onChange={handleUserInputChange} placeholder="Contact Number (Optional)" className="input-field"/></div>
                 <div>
                     <label className="text-strong" style={{marginBottom: '0.5rem', display: 'block'}}>Designation</label>
