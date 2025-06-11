@@ -85,8 +85,8 @@ html.dark .btn:active {
 .input-field:focus { outline: none; }
 html.dark .input-field { color: var(--dark-text); }
 
-/* New Dashboard Tab Styles */
-.dashboard-tab-btn {
+/* Animated Ridge Tab Styles */
+.ridge-tab-btn {
   flex: 1;
   position: relative;
   height: 3.5em;
@@ -104,11 +104,11 @@ html.dark .input-field { color: var(--dark-text); }
   justify-content: center;
   gap: 0.5rem;
 }
-html.dark .dashboard-tab-btn {
+html.dark .ridge-tab-btn {
   border-color: var(--dark-primary);
   color: var(--dark-text-strong);
 }
-.dashboard-tab-btn::after, .dashboard-tab-btn::before {
+.ridge-tab-btn::after, .ridge-tab-btn::before {
   content: "";
   position: absolute;
   left: 3%;
@@ -117,29 +117,29 @@ html.dark .dashboard-tab-btn {
   transition: 0.5s;
   transform-origin: center;
 }
-.dashboard-tab-btn::after {
+.ridge-tab-btn::after {
   top: -10px;
   background-color: var(--light-bg);
 }
-html.dark .dashboard-tab-btn::after {
+html.dark .ridge-tab-btn::after {
   background-color: var(--dark-bg);
 }
-.dashboard-tab-btn::before {
+.ridge-tab-btn::before {
   top: 80%;
   background-color: var(--light-bg);
 }
-html.dark .dashboard-tab-btn::before {
+html.dark .ridge-tab-btn::before {
   background-color: var(--dark-bg);
 }
-.dashboard-tab-btn:hover::before, .dashboard-tab-btn:hover::after,
-.dashboard-tab-btn.active::before, .dashboard-tab-btn.active::after {
+.ridge-tab-btn:hover::before, .ridge-tab-btn:hover::after,
+.ridge-tab-btn.active::before, .ridge-tab-btn.active::after {
   transform: scale(0);
 }
-.dashboard-tab-btn:hover, .dashboard-tab-btn.active {
+.ridge-tab-btn:hover, .ridge-tab-btn.active {
   box-shadow: inset 0px 0px 25px var(--light-primary-dark);
   color: var(--light-primary);
 }
-html.dark .dashboard-tab-btn:hover, html.dark .dashboard-tab-btn.active {
+html.dark .ridge-tab-btn:hover, html.dark .ridge-tab-btn.active {
   box-shadow: inset 0px 0px 25px var(--dark-primary-dark);
   color: var(--dark-primary);
 }
