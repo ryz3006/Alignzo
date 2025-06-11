@@ -22,15 +22,15 @@ const AppLayout = () => {
                     <Routes>
                         {isAdmin ? (
                             <>
-                                <Route path="dashboard" element={<AdminDashboardPage />} />
-                                <Route path="projects" element={<ProjectManagementPage />} />
-                                <Route path="users" element={<UserManagementPage />} />
-                                <Route path="settings" element={<SettingsPage />} />
+                                <Route path="admin/dashboard" element={<AdminDashboardPage />} />
+                                <Route path="admin/projects" element={<ProjectManagementPage />} />
+                                <Route path="admin/users" element={<UserManagementPage />} />
+                                <Route path="admin/settings" element={<SettingsPage />} />
                             </>
                         ) : (
                             <>
-                                <Route path="dashboard" element={<PublicDashboardPage />} />
-                                {/* ...other public routes... */}
+                                <Route path="user/dashboard" element={<PublicDashboardPage />} />
+                                {/* Add other public routes here when created */}
                             </>
                         )}
                     </Routes>
