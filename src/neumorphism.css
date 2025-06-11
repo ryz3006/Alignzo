@@ -85,61 +85,43 @@ html.dark .btn:active {
 .input-field:focus { outline: none; }
 html.dark .input-field { color: var(--dark-text); }
 
-/* Animated Ridge Tab Styles */
-.ridge-tab-btn {
-  flex: 1;
-  position: relative;
-  height: 3.5em;
-  border: 3px ridge var(--light-primary);
-  outline: none;
-  background-color: transparent;
-  color: var(--light-text-strong);
-  transition: 1s;
-  border-radius: 0.3em;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-html.dark .ridge-tab-btn {
-  border-color: var(--dark-primary);
-  color: var(--dark-text-strong);
-}
-.ridge-tab-btn::after, .ridge-tab-btn::before {
-  content: "";
-  position: absolute;
-  left: 3%;
-  width: 95%;
-  height: 40%;
-  transition: 0.5s;
-  transform-origin: center;
-}
-.ridge-tab-btn::after {
-  top: -10px;
-  background-color: var(--light-bg);
-}
-html.dark .ridge-tab-btn::after {
-  background-color: var(--dark-bg);
-}
-.ridge-tab-btn::before {
-  top: 80%;
-  background-color: var(--light-bg);
-}
-html.dark .ridge-tab-btn::before {
-  background-color: var(--dark-bg);
-}
-.ridge-tab-btn:hover::before, .ridge-tab-btn:hover::after,
-.ridge-tab-btn.active::before, .ridge-tab-btn.active::after {
-  transform: scale(0);
-}
-.ridge-tab-btn:hover, .ridge-tab-btn.active {
-  box-shadow: inset 0px 0px 25px var(--light-primary-dark);
+/* New Modern Tab Styles */
+.modern-tab {
+  padding: 1em 2em;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+  font-weight: 500;
   color: var(--light-primary);
+  background-color: var(--light-bg);
+  border: none;
+  border-radius: 45px;
+  box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease 0s;
+  cursor: pointer;
+  outline: none;
 }
-html.dark .ridge-tab-btn:hover, html.dark .ridge-tab-btn.active {
-  box-shadow: inset 0px 0px 25px var(--dark-primary-dark);
-  color: var(--dark-primary);
+.modern-tab:hover {
+  background-color: var(--light-primary);
+  box-shadow: 0px 15px 20px rgba(74, 144, 226, 0.4);
+  color: #fff;
+  transform: translateY(-7px);
+}
+.modern-tab:active {
+  transform: translateY(-1px);
+}
+.modern-tab.active {
+  background-color: var(--light-primary);
+  box-shadow: 0px 15px 20px rgba(74, 144, 226, 0.4);
+  color: #fff;
+  transform: translateY(-7px);
+}
+html.dark .modern-tab {
+    color: var(--dark-primary);
+    background-color: var(--dark-bg);
+}
+html.dark .modern-tab:hover, html.dark .modern-tab.active {
+    background-color: var(--dark-primary);
+    color: var(--dark-bg);
+    box-shadow: 0px 15px 20px rgba(88, 166, 255, 0.2);
 }
