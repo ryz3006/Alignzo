@@ -2,19 +2,33 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../firebase';
 import { collection, doc, onSnapshot } from 'firebase/firestore';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import * as XLSX from 'xlsx';
+
+// Helper function to dynamically load scripts
+const loadScript = (src) => {
+    return new Promise((resolve, reject) => {
+        if (document.querySelector(`script[src="${src}"]`)) {
+            resolve();
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error(`Script load error for ${src}`));
+        document.body.appendChild(script);
+    });
+};
+
+// --- Reusable Styled Components ---
 
 const StatTile = ({ title, value, icon, onClick }) => (
     <div onClick={onClick} className="neumorph-outset" style={{padding: '1.5rem', cursor: 'pointer', transition: 'transform 0.2s ease'}}>
       <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
-        <div className="neumorph-outset" style={{width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem'}}>
-          {icon}
+        <div className="neumorph-outset" style={{width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.75rem'}}>
+          <span className="text-primary">{icon}</span>
         </div>
         <div>
-          <p style={{margin: 0, fontSize: '0.9rem'}}>{title}</p>
-          <p style={{margin: '0', fontSize: '2rem', fontWeight: '700'}} className="text-primary">{value}</p>
+          <p style={{margin: 0, fontSize: '0.9rem', fontWeight: 500}}>{title}</p>
+          <p style={{margin: '0', fontSize: '2.25rem', fontWeight: '700'}} className="text-strong">{value}</p>
         </div>
       </div>
     </div>
@@ -24,7 +38,7 @@ const UserNode = ({ user, allUsers, level }) => {
     const subordinates = allUsers.filter(u => u.reportingTo === user.id);
     return (
         <div style={{ marginLeft: `${level * 25}px`, marginTop: '0.5rem' }}>
-            <div className="neumorph-inset" style={{padding: '0.5rem 1rem', borderRadius: '8px', display: 'flex', alignItems: 'center'}}>
+            <div className="neumorph-inset" style={{padding: '0.75rem 1rem', borderRadius: '8px', display: 'flex', alignItems: 'center'}}>
                 <span style={{fontWeight: '600'}} className="text-strong">{user.displayName || user.email}</span>
                 <span style={{marginLeft: '0.5rem', fontSize: '0.8rem'}}>({user.designation || 'N/A'})</span>
             </div>
@@ -37,6 +51,13 @@ const UserNode = ({ user, allUsers, level }) => {
     );
 };
 
+const TabButton = ({ active, onClick, children }) => (
+    <button type="button" onClick={onClick} className={`btn ${active ? 'neumorph-inset text-primary' : 'neumorph-outset'}`} style={{flex: 1, borderRadius: '12px'}}>
+        {children}
+    </button>
+);
+
+// --- Main Dashboard Page Component ---
 const AdminDashboardPage = () => {
     const [activeTab, setActiveTab] = useState('overview');
     const [users, setUsers] = useState([]);
@@ -46,6 +67,12 @@ const AdminDashboardPage = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
+        Promise.all([
+            loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"),
+            loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"),
+            loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js")
+        ]).catch(error => console.error(error));
+
         const unsubUsers = onSnapshot(collection(db, "users"), snap => setUsers(snap.docs.map(d => ({id: d.id, ...d.data()}))));
         const unsubProjects = onSnapshot(collection(db, "projects"), snap => setProjects(snap.docs.map(d => ({id: d.id, ...d.data()}))));
         const unsubDesignations = onSnapshot(doc(db, 'settings', 'designations'), d => setDesignations(d.exists() ? d.data().list : []));
@@ -54,17 +81,18 @@ const AdminDashboardPage = () => {
     
     const hierarchyData = useMemo(() => {
         const data = [];
-        const buildHierarchy = (user, level, manager) => {
+        const userMap = users.reduce((acc, u) => ({...acc, [u.id]: u}), {});
+        const buildHierarchy = (user, level) => {
             data.push({
                 Level: `L${level}`,
                 User: user.displayName || user.email,
                 Designation: user.designation || 'N/A',
-                'Reporting To': manager
+                'Reporting To': userMap[user.reportingTo]?.displayName || 'N/A'
             });
             const subordinates = users.filter(u => u.reportingTo === user.id);
-            subordinates.forEach(sub => buildHierarchy(sub, level + 1, user.displayName || user.email));
+            subordinates.forEach(sub => buildHierarchy(sub, level + 1));
         };
-        users.filter(u => !u.reportingTo).forEach(topLevelUser => buildHierarchy(topLevelUser, 1, 'N/A'));
+        users.filter(u => !u.reportingTo).forEach(topLevelUser => buildHierarchy(topLevelUser, 1));
         return data;
     }, [users]);
     
@@ -110,18 +138,20 @@ const AdminDashboardPage = () => {
     }, [selectedProjectId, users, designations, selectedProject]);
 
     const downloadAsExcel = (data, filename, title) => {
+        if (!window.XLSX) return alert("Excel library not loaded yet.");
         if (data.length === 0) return alert("No data to download.");
         const timestamp = `Downloaded from Alignzo dashboard at ${new Date().toLocaleString()}`;
         const finalData = [[title], [timestamp], []].concat([Object.keys(data[0])]).concat(data.map(Object.values));
-        const worksheet = XLSX.utils.aoa_to_sheet(finalData);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-        XLSX.writeFile(workbook, `${filename}.xlsx`);
+        const worksheet = window.XLSX.utils.aoa_to_sheet(finalData);
+        const workbook = window.XLSX.utils.book_new();
+        window.XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+        window.XLSX.writeFile(workbook, `${filename}.xlsx`);
     };
 
     const downloadAsPdf = (data, title, filename) => {
+        if (!window.jspdf) return alert("PDF library not loaded yet.");
         if (data.length === 0) return alert("No data to download.");
-        const doc = new jsPDF();
+        const doc = new window.jspdf.jsPDF();
         doc.text(title, 14, 16);
         doc.autoTable({
             startY: 22,
@@ -138,7 +168,7 @@ const AdminDashboardPage = () => {
             case 'hierarchy':
                 return (
                     <div className="neumorph-outset" style={{padding: '1.5rem'}}>
-                        <div style={{display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginBottom: '1rem'}}>
+                        <div style={{display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginBottom: '1rem'}}>
                             <button onClick={() => downloadAsExcel(hierarchyData, 'user-hierarchy', 'User Hierarchy')} className="btn neumorph-outset" style={{fontSize: '0.8rem', padding: '8px 12px'}}>Download Excel</button>
                             <button onClick={() => downloadAsPdf(hierarchyData, 'User Hierarchy', 'user-hierarchy')} className="btn neumorph-outset" style={{fontSize: '0.8rem', padding: '8px 12px'}}>Download PDF</button>
                         </div>
@@ -148,22 +178,22 @@ const AdminDashboardPage = () => {
             case 'escalation':
                 return (
                     <div className="neumorph-outset" style={{padding: '1.5rem'}}>
-                        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem'}}>
+                        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem'}}>
                             <div className="neumorph-inset" style={{padding: '0.25rem', borderRadius: '12px'}}>
-                                <select id="project-select" value={selectedProjectId} onChange={e => setSelectedProjectId(e.target.value)} className="input-field" style={{paddingRight: '2rem'}}>
+                                <select id="project-select" value={selectedProjectId} onChange={e => setSelectedProjectId(e.target.value)} className="input-field" style={{paddingRight: '2rem', minWidth: '250px'}}>
                                     <option value="">-- Select a Project --</option>
                                     {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                                 </select>
                             </div>
                             {selectedProjectId && (
-                                <div style={{display: 'flex', gap: '0.5rem'}}>
+                                <div style={{display: 'flex', gap: '1rem'}}>
                                     <button onClick={() => downloadAsExcel(escalationMatrix, 'escalation-matrix', `Escalation Matrix: ${selectedProject.name}`)} className="btn neumorph-outset" style={{fontSize: '0.8rem', padding: '8px 12px'}}>Download Excel</button>
                                     <button onClick={() => downloadAsPdf(escalationMatrix, `Escalation Matrix: ${selectedProject.name}`, 'escalation-matrix')} className="btn neumorph-outset" style={{fontSize: '0.8rem', padding: '8px 12px'}}>Download PDF</button>
                                 </div>
                             )}
                         </div>
                         {selectedProjectId && (
-                            <div className="overflow-x-auto">
+                            <div style={{overflowX: 'auto'}}>
                                 <table style={{width: '100%', borderCollapse: 'separate', borderSpacing: '0 0.5rem'}}>
                                     <thead>
                                         <tr>
@@ -171,12 +201,12 @@ const AdminDashboardPage = () => {
                                             <th style={{padding: '0.75rem', textAlign: 'left'}}>User</th>
                                             <th style={{padding: '0.75rem', textAlign: 'left'}}>Designation</th>
                                             <th style={{padding: '0.75rem', textAlign: 'left'}}>Email</th>
-                                            <th style={{padding: '0.75rem', textAlign: 'left'}}>Contact</th>
+                                            <th style={{padding: '0.75rem', textAlign: 'left'}}>Contact Number</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {escalationMatrix.map((item, index) => (
-                                            <tr key={item.email + index} className="neumorph-outset">
+                                            <tr key={item.email + index} className="neumorph-outset" style={{borderRadius: '12px'}}>
                                                 <td style={{padding: '1rem'}}>{item.Level}</td>
                                                 <td style={{padding: '1rem'}}>{item.User}</td>
                                                 <td style={{padding: '1rem'}}>{item.Designation}</td>
@@ -204,9 +234,9 @@ const AdminDashboardPage = () => {
     return (
         <div>
             <div className="neumorph-inset" style={{display: 'flex', borderRadius: '15px', padding: '0.5rem', marginBottom: '1.5rem'}}>
-                <button onClick={() => setActiveTab('overview')} className={`btn ${activeTab === 'overview' ? 'neumorph-outset text-primary' : ''}`} style={{flex: 1}}>Overview</button>
-                <button onClick={() => setActiveTab('hierarchy')} className={`btn ${activeTab === 'hierarchy' ? 'neumorph-outset text-primary' : ''}`} style={{flex: 1}}>User Hierarchy</button>
-                <button onClick={() => setActiveTab('escalation')} className={`btn ${activeTab === 'escalation' ? 'neumorph-outset text-primary' : ''}`} style={{flex: 1}}>Escalation Matrix</button>
+                <button onClick={() => setActiveTab('overview')} className={`btn ${activeTab === 'overview' ? 'neumorph-outset text-primary' : ''}`} style={{flex: 1, borderRadius: '12px'}}>Overview</button>
+                <button onClick={() => setActiveTab('hierarchy')} className={`btn ${activeTab === 'hierarchy' ? 'neumorph-outset text-primary' : ''}`} style={{flex: 1, borderRadius: '12px'}}>User Hierarchy</button>
+                <button onClick={() => setActiveTab('escalation')} className={`btn ${activeTab === 'escalation' ? 'neumorph-outset text-primary' : ''}`} style={{flex: 1, borderRadius: '12px'}}>Escalation Matrix</button>
             </div>
             <div>
                 {renderContent()}
