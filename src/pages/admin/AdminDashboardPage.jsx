@@ -17,8 +17,7 @@ const loadScript = (src) => {
     });
 };
 
-
-// --- Reusable Styled Components ---
+// --- Reusable Styled Components for this page ---
 
 const StatTile = ({ title, value, icon, onClick }) => (
     <div onClick={onClick} className="neumorph-outset" style={{padding: '1.5rem', cursor: 'pointer', transition: 'transform 0.2s ease-in-out'}}>
@@ -27,7 +26,7 @@ const StatTile = ({ title, value, icon, onClick }) => (
           <span className="text-primary">{icon}</span>
         </div>
         <div>
-          <p style={{margin: 0, fontSize: '0.9rem', fontWeight: 500, color: 'var(--light-text)'}} className="dark:text-[var(--dark-text)]">{title}</p>
+          <p style={{margin: 0, fontSize: '0.9rem', fontWeight: 500}} className="text-strong">{title}</p>
           <p style={{margin: '0', fontSize: '2.25rem', fontWeight: '700'}} className="text-strong">{value}</p>
         </div>
       </div>
@@ -51,14 +50,15 @@ const UserNode = ({ user, allUsers, level }) => {
     );
 };
 
-const DashboardTabButton = ({ active, onClick, children }) => (
-    <button type="button" onClick={onClick} className={`btn ${active ? 'neumorph-inset text-primary' : 'neumorph-outset'}`} style={{flex: 1, borderRadius: '12px'}}>
-        {children}
+const DashboardTabButton = ({ active, onClick, children, icon }) => (
+    <button type="button" onClick={onClick} className={`btn ${active ? 'neumorph-inset text-primary' : 'neumorph-outset'}`} style={{flex: 1, borderRadius: '12px', gap: '0.5rem'}}>
+        <span style={{width: '24px', height: '24px'}}>{icon}</span>
+        <span className="hidden md:inline">{children}</span>
     </button>
 );
 
-const DownloadButton = ({ onClick, children, isExcel }) => (
-    <button onClick={onClick} className="btn neumorph-outset" style={{fontSize: '0.8rem', padding: '8px 12px', color: isExcel ? '#217346' : '#C00000'}}>
+const DownloadButton = ({ onClick, children }) => (
+    <button onClick={onClick} className="btn neumorph-outset" style={{fontSize: '0.8rem', padding: '8px 12px'}}>
         {children}
     </button>
 );
@@ -145,7 +145,7 @@ const AdminDashboardPage = () => {
 
     const downloadAsExcel = (data, filename, title) => {
         if (!window.XLSX) return alert("Excel library not loaded yet.");
-        if (data.length === 0) return alert("No data available to download.");
+        if (data.length === 0) return alert("No data to download.");
         const timestamp = `Downloaded from Alignzo dashboard at ${new Date().toLocaleString()}`;
         const finalData = [[title], [timestamp], []].concat([Object.keys(data[0])]).concat(data.map(row => Object.values(row)));
         const worksheet = window.XLSX.utils.aoa_to_sheet(finalData);
@@ -156,7 +156,7 @@ const AdminDashboardPage = () => {
 
     const downloadAsPdf = (data, title, filename) => {
         if (!window.jspdf) return alert("PDF library not loaded yet.");
-        if (data.length === 0) return alert("No data available to download.");
+        if (data.length === 0) return alert("No data to download.");
         const doc = new window.jspdf.jsPDF();
         doc.text(title, 14, 16);
         doc.autoTable({
@@ -240,9 +240,9 @@ const AdminDashboardPage = () => {
     return (
         <div>
             <div className="neumorph-inset" style={{display: 'flex', borderRadius: '15px', padding: '0.5rem', marginBottom: '1.5rem', gap: '0.5rem'}}>
-                <DashboardTabButton active={activeTab === 'overview'} onClick={() => setActiveTab('overview')}>Overview</DashboardTabButton>
-                <DashboardTabButton active={activeTab === 'hierarchy'} onClick={() => setActiveTab('hierarchy')}>User Hierarchy</DashboardTabButton>
-                <DashboardTabButton active={activeTab === 'escalation'} onClick={() => setActiveTab('escalation')}>Escalation Matrix</DashboardTabButton>
+                <DashboardTabButton active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} icon={<span>&#128202;</span>}>Overview</DashboardTabButton>
+                <DashboardTabButton active={activeTab === 'hierarchy'} onClick={() => setActiveTab('hierarchy')} icon={<span>&#128101;</span>}>Hierarchy</DashboardTabButton>
+                <DashboardTabButton active={activeTab === 'escalation'} onClick={() => setActiveTab('escalation')} icon={<span>&#128226;</span>}>Escalation</DashboardTabButton>
             </div>
             <div>
                 {renderContent()}
