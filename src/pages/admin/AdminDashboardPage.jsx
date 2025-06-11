@@ -34,16 +34,45 @@ const StatTile = ({ title, value, icon, onClick }) => (
 );
 
 const UserNode = ({ user, allUsers, level }) => {
+    const [isExpanded, setIsExpanded] = useState(true);
     const subordinates = allUsers.filter(u => u.reportingTo === user.id);
     return (
-        <div style={{ marginLeft: `${level * 25}px`, marginTop: '0.5rem' }}>
-            <div className="neumorph-inset" style={{padding: '0.75rem 1rem', borderRadius: '8px', display: 'flex', alignItems: 'center'}}>
-                <span style={{fontWeight: '600'}} className="text-strong">{user.displayName || user.email}</span>
-                <span style={{marginLeft: '0.5rem', fontSize: '0.8rem'}}>({user.designation || 'N/A'})</span>
+        <div style={{ position: 'relative', paddingLeft: '30px' }}>
+             <style>{`
+                .node-connector::before {
+                    content: '';
+                    position: absolute;
+                    left: 12px;
+                    top: -14px;
+                    height: 100%;
+                    border-left: 2px solid var(--light-primary);
+                }
+                .node-connector-entry::after {
+                    content: '';
+                    position: absolute;
+                    left: 12px;
+                    top: 22px;
+                    width: 18px;
+                    height: 2px;
+                    background-color: var(--light-primary);
+                }
+             `}</style>
+            <div className="node-connector-entry" style={{ display: 'flex', alignItems: 'center', margin: '0.5rem 0' }}>
+                <button 
+                    onClick={() => setIsExpanded(!isExpanded)} 
+                    className="btn neumorph-outset" 
+                    style={{ borderRadius: '50%', padding: '0.5rem', marginRight: '10px', visibility: subordinates.length > 0 ? 'visible' : 'hidden' }}
+                >
+                    <svg style={{width: '1rem', height: '1rem', transition: 'transform 0.3s', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)'}} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
+                </button>
+                <div className="neumorph-inset" style={{padding: '0.75rem 1rem', borderRadius: '8px', flexGrow: 1}}>
+                    <span style={{fontWeight: '600'}} className="text-strong">{user.displayName || user.email}</span>
+                    <span style={{marginLeft: '0.5rem', fontSize: '0.8rem'}}>({user.designation || 'N/A'})</span>
+                </div>
             </div>
-            {subordinates.length > 0 && (
-                <div style={{borderLeft: '2px solid var(--light-primary)', paddingLeft: '20px', marginTop: '0.5rem'}} className="dark:border-l-[var(--dark-primary)]">
-                    {subordinates.map(sub => <UserNode key={sub.id} user={sub} allUsers={allUsers} level={level + 1} />)}
+            {isExpanded && subordinates.length > 0 && (
+                <div className="node-connector">
+                    {subordinates.map(sub => <UserNode key={sub.id} user={sub} allUsers={allUsers} />)}
                 </div>
             )}
         </div>
@@ -51,7 +80,7 @@ const UserNode = ({ user, allUsers, level }) => {
 };
 
 const DashboardTabButton = ({ active, onClick, children, icon }) => (
-    <button type="button" onClick={onClick} className={`modern-tab ${active ? 'active' : ''}`}>
+    <button type="button" onClick={onClick} className={`modern-tab-btn ${active ? 'active' : ''}`}>
         <span style={{width: '24px', height: '24px'}}>{icon}</span>
         <span className="hidden md:inline">{children}</span>
     </button>
@@ -73,6 +102,12 @@ const AdminDashboardPage = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
+        Promise.all([
+            loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"),
+            loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"),
+            loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js")
+        ]).catch(error => console.error("Could not load download scripts:", error));
+
         const unsubUsers = onSnapshot(collection(db, "users"), snap => setUsers(snap.docs.map(d => ({id: d.id, ...d.data()}))));
         const unsubProjects = onSnapshot(collection(db, "projects"), snap => setProjects(snap.docs.map(d => ({id: d.id, ...d.data()}))));
         const unsubDesignations = onSnapshot(doc(db, 'settings', 'designations'), d => setDesignations(d.exists() ? d.data().list : []));
@@ -149,7 +184,7 @@ const AdminDashboardPage = () => {
     };
 
     const downloadAsPdf = (data, title, filename) => {
-        if (typeof window.jspdf === 'undefined') return alert("PDF library not loaded yet. Please try again in a moment.");
+        if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') return alert("PDF library not loaded yet. Please try again in a moment.");
         if (data.length === 0) return alert("No data available to download.");
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
@@ -176,7 +211,7 @@ const AdminDashboardPage = () => {
                             <DownloadButton onClick={() => downloadAsExcel(hierarchyData, 'user-hierarchy', 'User Hierarchy')}>&#128196; Excel</DownloadButton>
                             <DownloadButton onClick={() => downloadAsPdf(hierarchyData, 'User Hierarchy', 'user-hierarchy')}>&#128196; PDF</DownloadButton>
                         </div>
-                        {users.filter(u => !u.reportingTo).map(user => <UserNode key={user.id} user={user} allUsers={users} level={0} />)}
+                        {users.filter(u => !u.reportingTo).map(user => <UserNode key={user.id} user={user} allUsers={users} />)}
                     </div>
                 );
             case 'escalation':
