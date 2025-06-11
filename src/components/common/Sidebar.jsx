@@ -26,23 +26,16 @@ const Sidebar = ({ isMobileOpen, setMobileOpen }) => {
     ];
     const navItems = isAdmin ? adminNavItems : publicNavItems;
     
-    // This style block will be injected into the head
-    const style = `
-        .sidebar { transition: width 0.3s ease-in-out, transform 0.3s ease-in-out; }
-        .nav-link { display: flex; align-items: center; padding: 0.75rem; border-radius: 12px; transition: all 0.2s ease; text-decoration: none; color: var(--light-text); }
-        html.dark .nav-link { color: var(--dark-text); }
-        .nav-link.active { box-shadow: inset 5px 5px 10px var(--light-shadow-dark), inset -5px -5px 10px var(--light-shadow-light); color: var(--light-primary); }
-        html.dark .nav-link.active { box-shadow: inset 5px 5px 10px var(--dark-shadow-dark), inset -5px -5px 10px var(--dark-shadow-light); color: var(--dark-primary); }
-        .nav-link:not(.active):hover { transform: translateY(-2px); box-shadow: 4px 4px 8px var(--light-shadow-dark), -4px -4px 8px var(--light-shadow-light); }
-        html.dark .nav-link:not(.active):hover { box-shadow: 4px 4px 8px var(--dark-shadow-dark), -4px -4px 8px var(--dark-shadow-light); }
-        @media (max-width: 768px) {
-            .sidebar { position: fixed; height: 100%; z-index: 20; transform: ${isMobileOpen ? 'translateX(0)' : 'translateX(-100%)'}; }
-        }
-    `;
-
     return (
-        <aside className="neumorph-outset flex flex-col p-2" style={{width: isMinimized ? '80px' : '260px', transition: 'width 0.3s ease'}}>
-            <style>{style}</style>
+        <aside className={`neumorph-outset flex flex-col p-2 transition-all duration-300 ease-in-out z-20 flex-shrink-0 absolute md:relative inset-y-0 left-0 transform ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`} style={{width: isMinimized ? '80px' : '260px', borderRadius: 0}}>
+            <style>{`
+                .nav-link { display: flex; align-items: center; padding: 0.75rem; border-radius: 12px; transition: all 0.2s ease; color: var(--light-text); text-decoration: none; }
+                html.dark .nav-link { color: var(--dark-text); }
+                .nav-link.active { box-shadow: inset 5px 5px 10px var(--light-shadow-dark), inset -5px -5px 10px var(--light-shadow-light); color: var(--light-primary); }
+                html.dark .nav-link.active { box-shadow: inset 5px 5px 10px var(--dark-shadow-dark), inset -5px -5px 10px var(--dark-shadow-light); color: var(--dark-primary); }
+                .nav-link:not(.active):hover { transform: translateY(-2px); box-shadow: 4px 4px 8px var(--light-shadow-dark), -4px -4px 8px var(--light-shadow-light); }
+                html.dark .nav-link:not(.active):hover { box-shadow: 4px 4px 8px var(--dark-shadow-dark), -4px -4px 8px var(--dark-shadow-light); }
+            `}</style>
             <div style={{height: '3rem', margin: '0.5rem 0 2rem 0', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                 <img src={isMinimized ? LogoOnly : LogoWithName} alt="Alignzo Logo" style={{height: '2.5rem', transition: 'all 0.3s'}} />
             </div>
@@ -51,9 +44,8 @@ const Sidebar = ({ isMobileOpen, setMobileOpen }) => {
                     <NavLink
                         key={item.label}
                         to={item.to}
-                        onClick={() => isMobileOpen && setMobileOpen(false)}
-                        className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-                        style={{justifyContent: isMinimized ? 'center' : 'flex-start'}}
+                        onClick={() => setMobileOpen(false)}
+                        className={({ isActive }) => `nav-link ${isActive ? 'active' : ''} ${isMinimized ? 'justify-center' : ''}`}
                     >
                         <div style={{width: '24px', flexShrink: 0}}>{item.icon}</div>
                         {!isMinimized && <span style={{fontWeight: '600', marginLeft: '1rem'}}>{item.label}</span>}
