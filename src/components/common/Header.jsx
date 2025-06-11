@@ -38,21 +38,21 @@ const Header = ({ onMenuClick }) => {
     };
     
     return (
-         <header className="neumorph-outset" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.5rem', borderRadius: '0', flexShrink: 0 }}>
+         <header className="neumorph-outset" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1.5rem', borderRadius: '0', flexShrink: 0 }}>
             <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
-                <div style={{display: 'block' /* md:hidden */}}><MenuIcon onClick={onMenuClick} /></div>
+                <div className="md:hidden"><MenuIcon onClick={onMenuClick} /></div>
                 <h1 style={{fontSize: '1.5rem', fontWeight: '600'}} className="text-primary">{getPageTitle()}</h1>
             </div>
              <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
                  <button onClick={toggleTheme} className="btn neumorph-outset" style={{borderRadius: '50%', padding: '0.75rem'}}>
-                     {theme === 'light' ? <MoonIcon /> : <SunIcon />}
+                     <span className="text-strong">{theme === 'light' ? <MoonIcon /> : <SunIcon />}</span>
                  </button>
                  <div style={{position: 'relative'}}>
                     <button onClick={() => setProfileMenuOpen(!profileMenuOpen)} className="btn neumorph-outset" style={{borderRadius: '50%', padding: '0.75rem'}}>
-                        <ProfileIcon />
+                        <span className="text-strong"><ProfileIcon /></span>
                     </button>
                     {profileMenuOpen && (
-                        <div className="neumorph-outset" style={{position: 'absolute', right: 0, top: 'calc(100% + 10px)', width: '250px', padding: '1rem', zIndex: 50, borderRadius: '12px'}}>
+                        <div className="neumorph-outset" style={{position: 'absolute', right: 0, top: 'calc(100% + 15px)', width: '250px', padding: '1rem', zIndex: 50, borderRadius: '12px'}}>
                             <p style={{margin: 0, fontWeight: '600', textAlign: 'center'}} className="text-strong">{currentUser?.displayName || currentUser?.email}</p>
                             <div style={{height: '1px', background: 'var(--light-text)', margin: '1rem 0', opacity: 0.2}}></div>
                             <button onClick={handleLogout} className="btn neumorph-outset" style={{width: '100%', color: 'var(--light-primary)'}}>
