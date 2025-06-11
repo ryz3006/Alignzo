@@ -4,7 +4,6 @@ import { db } from '../../firebase';
 import { collection, doc, onSnapshot } from 'firebase/firestore';
 
 // --- Reusable Styled Components for this page ---
-
 const StatTile = ({ title, value, icon, onClick }) => (
     <div onClick={onClick} className="neumorph-outset" style={{padding: '1.5rem', cursor: 'pointer', transition: 'transform 0.2s ease-in-out'}}>
       <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
@@ -124,7 +123,7 @@ const AdminDashboardPage = () => {
     }, [selectedProjectId, users, designations, selectedProject]);
 
     const downloadAsExcel = (data, filename, title) => {
-        if (!window.XLSX) return alert("Excel library not loaded yet.");
+        if (typeof window.XLSX === 'undefined') return alert("Excel library not loaded yet. Please try again in a moment.");
         if (data.length === 0) return alert("No data available to download.");
         const timestamp = `Downloaded from Alignzo dashboard at ${new Date().toLocaleString()}`;
         const finalData = [[title], [timestamp], []].concat([Object.keys(data[0])]).concat(data.map(row => Object.values(row)));
@@ -135,16 +134,17 @@ const AdminDashboardPage = () => {
     };
 
     const downloadAsPdf = (data, title, filename) => {
-        if (!window.jspdf) return alert("PDF library not loaded yet.");
+        if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
+            return alert("PDF library not loaded yet. Please try again in a moment.");
+        }
         if (data.length === 0) return alert("No data to download.");
         
-        // Correct way to instantiate jsPDF when loaded from a CDN
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
 
         if (typeof doc.autoTable !== 'function') {
             console.error("jsPDF-AutoTable plugin is not loaded correctly.");
-            alert("Could not generate PDF table. Plugin is missing.");
+            alert("Could not generate PDF table. The AutoTable plugin is missing.");
             return;
         }
 
@@ -165,7 +165,7 @@ const AdminDashboardPage = () => {
                 return (
                     <div className="neumorph-outset" style={{padding: '1.5rem'}}>
                         <div style={{display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginBottom: '1rem'}}>
-                            <DownloadButton onClick={() => downloadAsExcel(hierarchyData, 'user-hierarchy', 'User Hierarchy')} isExcel>Download Excel</DownloadButton>
+                            <DownloadButton onClick={() => downloadAsExcel(hierarchyData, 'user-hierarchy', 'User Hierarchy')}>Download Excel</DownloadButton>
                             <DownloadButton onClick={() => downloadAsPdf(hierarchyData, 'User Hierarchy', 'user-hierarchy')}>Download PDF</DownloadButton>
                         </div>
                         {users.filter(u => !u.reportingTo).map(user => <UserNode key={user.id} user={user} allUsers={users} level={0} />)}
@@ -183,7 +183,7 @@ const AdminDashboardPage = () => {
                             </div>
                             {selectedProjectId && (
                                 <div style={{display: 'flex', gap: '1rem'}}>
-                                    <DownloadButton onClick={() => downloadAsExcel(escalationMatrix, 'escalation-matrix', `Escalation Matrix: ${selectedProject.name}`)} isExcel>Download Excel</DownloadButton>
+                                    <DownloadButton onClick={() => downloadAsExcel(escalationMatrix, 'escalation-matrix', `Escalation Matrix: ${selectedProject.name}`)}>Download Excel</DownloadButton>
                                     <DownloadButton onClick={() => downloadAsPdf(escalationMatrix, `Escalation Matrix: ${selectedProject.name}`, 'escalation-matrix')}>Download PDF</DownloadButton>
                                 </div>
                             )}
@@ -200,7 +200,7 @@ const AdminDashboardPage = () => {
                                             <th style={{padding: '0.75rem', textAlign: 'left'}} className="text-strong">Contact Number</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                                         {escalationMatrix.map((item, index) => (
                                             <tr key={item.email + index} className="neumorph-outset" style={{borderRadius: '12px'}}>
                                                 <td style={{padding: '1rem'}} className="text-strong">{item.Level}</td>
@@ -229,7 +229,7 @@ const AdminDashboardPage = () => {
     
     return (
         <div>
-            <div className="neumorph-inset" style={{display: 'flex', borderRadius: '15px', padding: '0.5rem', marginBottom: '1.5rem', gap: '0.5rem'}}>
+            <div style={{display: 'flex', borderRadius: '15px', padding: '0.5rem', marginBottom: '1.5rem', gap: '0.5rem'}}>
                 <DashboardTabButton active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} icon={<span>&#128202;</span>}>Overview</DashboardTabButton>
                 <DashboardTabButton active={activeTab === 'hierarchy'} onClick={() => setActiveTab('hierarchy')} icon={<span>&#128101;</span>}>Hierarchy</DashboardTabButton>
                 <DashboardTabButton active={activeTab === 'escalation'} onClick={() => setActiveTab('escalation')} icon={<span>&#128226;</span>}>Escalation</DashboardTabButton>
