@@ -3,20 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { db } from '../../firebase';
 import { collection, doc, onSnapshot } from 'firebase/firestore';
 
-// Helper function to dynamically load scripts if they aren't already loaded
-const loadScript = (src) => {
-    return new Promise((resolve, reject) => {
-        if (document.querySelector(`script[src="${src}"]`)) {
-            return resolve();
-        }
-        const script = document.createElement('script');
-        script.src = src;
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error(`Script load error for ${src}`));
-        document.body.appendChild(script);
-    });
-};
-
 // --- Reusable Styled Components for this page ---
 
 const StatTile = ({ title, value, icon, onClick }) => (
@@ -73,12 +59,6 @@ const AdminDashboardPage = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        Promise.all([
-            loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"),
-            loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"),
-            loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js")
-        ]).catch(error => console.error("Could not load download scripts:", error));
-
         const unsubUsers = onSnapshot(collection(db, "users"), snap => setUsers(snap.docs.map(d => ({id: d.id, ...d.data()}))));
         const unsubProjects = onSnapshot(collection(db, "projects"), snap => setProjects(snap.docs.map(d => ({id: d.id, ...d.data()}))));
         const unsubDesignations = onSnapshot(doc(db, 'settings', 'designations'), d => setDesignations(d.exists() ? d.data().list : []));
@@ -145,7 +125,7 @@ const AdminDashboardPage = () => {
 
     const downloadAsExcel = (data, filename, title) => {
         if (!window.XLSX) return alert("Excel library not loaded yet.");
-        if (data.length === 0) return alert("No data to download.");
+        if (data.length === 0) return alert("No data available to download.");
         const timestamp = `Downloaded from Alignzo dashboard at ${new Date().toLocaleString()}`;
         const finalData = [[title], [timestamp], []].concat([Object.keys(data[0])]).concat(data.map(row => Object.values(row)));
         const worksheet = window.XLSX.utils.aoa_to_sheet(finalData);
@@ -157,7 +137,17 @@ const AdminDashboardPage = () => {
     const downloadAsPdf = (data, title, filename) => {
         if (!window.jspdf) return alert("PDF library not loaded yet.");
         if (data.length === 0) return alert("No data to download.");
-        const doc = new window.jspdf.jsPDF();
+        
+        // Correct way to instantiate jsPDF when loaded from a CDN
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        if (typeof doc.autoTable !== 'function') {
+            console.error("jsPDF-AutoTable plugin is not loaded correctly.");
+            alert("Could not generate PDF table. Plugin is missing.");
+            return;
+        }
+
         doc.text(title, 14, 16);
         doc.autoTable({
             startY: 22,
