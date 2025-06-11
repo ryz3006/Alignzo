@@ -40,7 +40,6 @@ const Header = ({ onMenuClick }) => {
     return (
          <header className="neumorph-outset" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1.5rem', borderRadius: '0', flexShrink: 0 }}>
             <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
-                <MenuIcon onClick={onMenuClick} />
                 <h1 style={{fontSize: '1.5rem', fontWeight: '600'}} className="text-primary">{getPageTitle()}</h1>
             </div>
              <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
