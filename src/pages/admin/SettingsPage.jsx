@@ -3,12 +3,24 @@ import { db, auth } from '../../firebase';
 import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 import { updatePassword } from 'firebase/auth';
 
-const SettingsCard = ({ title, buttonText, onClick }) => (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md flex justify-between items-center">
-        <h3 className="text-xl font-semibold text-gray-800 dark:text-white">{title}</h3>
-        <button onClick={onClick} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-            Configure
+const SettingsCard = ({ title, description, buttonText, onClick }) => (
+    <div className="neumorph-outset" style={{padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem'}}>
+        <h3 style={{margin: 0, fontSize: '1.25rem', fontWeight: '600'}} className="text-strong">{title}</h3>
+        <p style={{margin: 0, flexGrow: 1}}>{description}</p>
+        <button onClick={onClick} className="btn neumorph-outset" style={{alignSelf: 'flex-start', color: 'var(--light-primary)'}}>
+            {buttonText}
         </button>
+    </div>
+);
+
+const Modal = ({ children, onClose }) => (
+    <div style={{position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem'}}>
+        <div className="neumorph-outset" style={{padding: '2rem', width: '100%', maxWidth: '600px', position: 'relative'}}>
+            <button onClick={onClose} className="btn neumorph-outset" style={{position: 'absolute', top: '1rem', right: '1rem', borderRadius: '50%', padding: '0.5rem', width: '40px', height: '40px'}}>
+                &times;
+            </button>
+            {children}
+        </div>
     </div>
 );
 
@@ -27,7 +39,7 @@ const SettingsPage = () => {
             if (doc.exists()) setCountries(doc.data().list || []);
         });
         const designationUnsub = onSnapshot(doc(db, 'settings', 'designations'), (doc) => {
-            if (doc.exists()) setDesignations(doc.data().list || []);
+            if (doc.exists()) setDesignations(d.exists() ? d.data().list : []);
         });
         return () => {
             countryUnsub();
@@ -95,51 +107,51 @@ const SettingsPage = () => {
         switch (modal) {
             case 'countries':
                 return (
-                    <>
-                        <h2 className="text-2xl font-bold mb-4 dark:text-white">Manage Countries</h2>
-                        <form onSubmit={handleAddCountry} className="flex items-center gap-4 mb-4">
-                            <input type="text" value={newCountry.name} onChange={(e) => setNewCountry({...newCountry, name: e.target.value})} placeholder="Country Name" className="flex-1 p-2 border rounded dark:bg-gray-700 dark:border-gray-600" />
-                            <input type="text" value={newCountry.code} onChange={(e) => setNewCountry({...newCountry, code: e.target.value.toUpperCase()})} placeholder="3-Letter Code" maxLength="3" className="w-32 p-2 border rounded dark:bg-gray-700 dark:border-gray-600" />
-                            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Add</button>
+                    <div>
+                        <h2 style={{fontSize: '1.5rem', fontWeight: '700', marginBottom: '2rem'}} className="text-strong">Manage Countries</h2>
+                        <form onSubmit={handleAddCountry} style={{display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem'}}>
+                            <div className="neumorph-inset" style={{flex: 1}}><input type="text" value={newCountry.name} onChange={(e) => setNewCountry({...newCountry, name: e.target.value})} placeholder="Country Name" className="input-field" /></div>
+                            <div className="neumorph-inset" style={{width: '120px'}}><input type="text" value={newCountry.code} onChange={(e) => setNewCountry({...newCountry, code: e.target.value.toUpperCase()})} placeholder="3-Letter Code" maxLength="3" className="input-field" /></div>
+                            <button type="submit" className="btn neumorph-outset" style={{color: 'var(--light-primary)'}}>Add</button>
                         </form>
-                        <div className="overflow-y-auto max-h-60">
+                        <div style={{maxHeight: '250px', overflowY: 'auto'}}>
                             {countries.map(country => (
-                                <div key={country.code} className="flex justify-between items-center p-2 border-b dark:border-gray-700">
-                                    <span className="dark:text-gray-300">{country.name} ({country.code})</span>
-                                    <button onClick={() => handleDeleteCountry(country.code)} className="text-red-500 hover:text-red-700">Delete</button>
+                                <div key={country.code} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', borderBottom: '1px solid rgba(0,0,0,0.1)'}} className="dark:border-b-[rgba(255,255,255,0.1)]">
+                                    <span className="text-strong">{country.name} ({country.code})</span>
+                                    <button onClick={() => handleDeleteCountry(country.code)} style={{color: '#e53e3e', background: 'none', border: 'none', cursor: 'pointer'}}>Delete</button>
                                 </div>
                             ))}
                         </div>
-                    </>
+                    </div>
                 );
             case 'designations':
                 return (
-                     <>
-                        <h2 className="text-2xl font-bold mb-4 dark:text-white">Configure Designations</h2>
-                        <form onSubmit={handleAddDesignation} className="flex items-center gap-4 mb-4">
-                            <input type="text" value={newDesignation} onChange={(e) => setNewDesignation(e.target.value)} placeholder="New Designation" className="flex-1 p-2 border rounded dark:bg-gray-700 dark:border-gray-600" />
-                            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Add</button>
+                     <div>
+                        <h2 style={{fontSize: '1.5rem', fontWeight: '700', marginBottom: '2rem'}} className="text-strong">Configure Designations</h2>
+                        <form onSubmit={handleAddDesignation} style={{display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem'}}>
+                            <div className="neumorph-inset" style={{flex: 1}}><input type="text" value={newDesignation} onChange={(e) => setNewDesignation(e.target.value)} placeholder="New Designation" className="input-field" /></div>
+                            <button type="submit" className="btn neumorph-outset" style={{color: 'var(--light-primary)'}}>Add</button>
                         </form>
-                        <div className="overflow-y-auto max-h-60">
+                        <div style={{maxHeight: '250px', overflowY: 'auto'}}>
                             {designations.map(d => (
-                                <div key={d} className="flex justify-between items-center p-2 border-b dark:border-gray-700">
-                                    <span className="dark:text-gray-300">{d}</span>
-                                    <button onClick={() => handleDeleteDesignation(d)} className="text-red-500 hover:text-red-700">Delete</button>
+                                <div key={d} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', borderBottom: '1px solid rgba(0,0,0,0.1)'}} className="dark:border-b-[rgba(255,255,255,0.1)]">
+                                    <span className="text-strong">{d}</span>
+                                    <button onClick={() => handleDeleteDesignation(d)} style={{color: '#e53e3e', background: 'none', border: 'none', cursor: 'pointer'}}>Delete</button>
                                 </div>
                             ))}
                         </div>
-                    </>
+                    </div>
                 );
             case 'password':
                  return (
-                    <>
-                        <h2 className="text-2xl font-bold mb-4 dark:text-white">Reset Admin Password</h2>
-                        <form onSubmit={handlePasswordReset} className="space-y-4">
-                            <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New Password" className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600" />
-                            <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm New Password" className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600" />
-                            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Reset Password</button>
+                    <div>
+                        <h2 style={{fontSize: '1.5rem', fontWeight: '700', marginBottom: '2rem'}} className="text-strong">Reset Admin Password</h2>
+                        <form onSubmit={handlePasswordReset} style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
+                            <div className="neumorph-inset"><input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New Password" className="input-field" /></div>
+                            <div className="neumorph-inset"><input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm New Password" className="input-field" /></div>
+                            <button type="submit" className="btn neumorph-outset btn-primary">Reset Password</button>
                         </form>
-                    </>
+                    </div>
                 );
             default:
                 return null;
@@ -147,20 +159,17 @@ const SettingsPage = () => {
     }
 
     return (
-        <div className="space-y-6">
-            <SettingsCard title="Manage Countries" buttonText="Configure" onClick={() => setModal('countries')} />
-            <SettingsCard title="Configure Designations" buttonText="Configure" onClick={() => setModal('designations')} />
-            <SettingsCard title="Reset Admin Password" buttonText="Configure" onClick={() => setModal('password')} />
+        <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem'}}>
+            <SettingsCard title="Manage Countries" description="Add or remove countries for project mapping." buttonText="Configure" onClick={() => setModal('countries')} />
+            <SettingsCard title="Configure Designations" description="Define the roles and hierarchy levels for your team." buttonText="Configure" onClick={() => setModal('designations')} />
+            <SettingsCard title="Reset Admin Password" description="Update the password for the currently logged-in admin user." buttonText="Configure" onClick={() => setModal('password')} />
             
-            {message && <div className="fixed bottom-10 right-10 p-3 bg-green-100 text-green-800 rounded dark:bg-green-900/50 dark:text-green-300 shadow-lg">{message}</div>}
+            {message && <div style={{position: 'fixed', bottom: '2rem', right: '2rem', padding: '1rem 1.5rem', borderRadius: '12px'}} className="neumorph-outset text-primary">{message}</div>}
 
             {modal && (
-                 <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
-                    <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-lg relative">
-                         <button onClick={() => setModal(null)} className="absolute top-4 right-4 text-gray-500 dark:text-gray-300 hover:text-black dark:hover:text-white text-2xl">&times;</button>
-                        {renderModalContent()}
-                    </div>
-                </div>
+                 <Modal onClose={() => setModal(null)}>
+                    {renderModalContent()}
+                 </Modal>
             )}
         </div>
     );
