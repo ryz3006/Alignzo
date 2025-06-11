@@ -44,10 +44,12 @@ const Header = ({ onMenuClick }) => {
                 <h1 style={{fontSize: '1.5rem', fontWeight: '600'}} className="text-primary">{getPageTitle()}</h1>
             </div>
              <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
-                 <button onClick={toggleTheme} className="btn neumorph-outset" style={{borderRadius: '50%', padding: '0.75rem', color: 'var(--light-text)'}}><span className="dark:text-[var(--dark-text)]">{theme === 'light' ? <MoonIcon /> : <SunIcon />}</span></button>
+                 <button onClick={toggleTheme} className="btn neumorph-outset" style={{borderRadius: '50%', padding: '0.75rem'}}>
+                     <span className="text-strong">{theme === 'light' ? <MoonIcon /> : <SunIcon />}</span>
+                 </button>
                  <div style={{position: 'relative'}}>
-                    <button onClick={() => setProfileMenuOpen(!profileMenuOpen)} className="btn neumorph-outset" style={{borderRadius: '50%', padding: '0.75rem', color: 'var(--light-text)'}}>
-                        <span className="dark:text-[var(--dark-text)]"><ProfileIcon /></span>
+                    <button onClick={() => setProfileMenuOpen(!profileMenuOpen)} className="btn neumorph-outset" style={{borderRadius: '50%', padding: '0.75rem'}}>
+                        <span className="text-strong"><ProfileIcon /></span>
                     </button>
                     {profileMenuOpen && (
                         <div className="neumorph-outset" style={{position: 'absolute', right: 0, top: 'calc(100% + 15px)', width: '250px', padding: '1rem', zIndex: 50, borderRadius: '12px'}}>
