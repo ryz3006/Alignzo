@@ -75,6 +75,7 @@ html.dark .neumorph-inset {
 html.dark .btn:active {
   box-shadow: inset 4px 4px 8px var(--dark-shadow-dark), inset -4px -4px 8px var(--dark-shadow-light) !important;
 }
+
 .btn-primary {
   color: white;
   background-color: var(--light-primary);
