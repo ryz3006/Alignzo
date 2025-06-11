@@ -4,6 +4,7 @@ import LogoWithName from '../../assets/images/Logo_with_Name.png';
 import LogoOnly from '../../assets/images/Logo_only.png';
 import { useAuth } from '../../contexts/AuthContext';
 
+// Icon components
 const DashboardIcon = () => <svg style={{height: '1.5rem', width: '1.5rem'}} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>;
 const ProjectsIcon = () => <svg style={{height: '1.5rem', width: '1.5rem'}} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>;
 const UsersIcon = () => <svg style={{height: '1.5rem', width: '1.5rem'}} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21a6 6 0 00-9-5.197M15 21a6 6 0 006-6v-1a6 6 0 00-9-5.197" /></svg>;
@@ -26,14 +27,15 @@ const Sidebar = ({ isMobileOpen, setMobileOpen }) => {
     ];
     const navItems = isAdmin ? adminNavItems : publicNavItems;
     
-    const sidebarClasses = `neumorph-outset flex flex-col p-4 transition-all duration-300 ease-in-out z-20 flex-shrink-0 
-        ${isMinimized ? 'w-24' : 'w-64'} 
-        md:relative md:translate-x-0 
-        absolute inset-y-0 left-0 transform ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}`;
+    // Determine responsive classes
+    const responsiveClasses = `
+        absolute inset-y-0 left-0 transform ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} 
+        md:relative md:translate-x-0
+    `;
 
     return (
-        <aside className={sidebarClasses}>
-            <div style={{height: '3rem', marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+        <aside className={`neumorph-outset flex flex-col p-2 transition-all duration-300 ease-in-out z-20 flex-shrink-0 ${isMinimized ? 'w-24' : 'w-60'} ${responsiveClasses}`}>
+            <div style={{height: '3rem', margin: '0.5rem 0 2rem 0', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                 <img src={isMinimized ? LogoOnly : LogoWithName} alt="Alignzo Logo" style={{height: '2.5rem', transition: 'all 0.3s'}} />
             </div>
             <nav style={{flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
@@ -41,6 +43,7 @@ const Sidebar = ({ isMobileOpen, setMobileOpen }) => {
                     <NavLink
                         key={item.label}
                         to={item.to}
+                        onClick={() => setMobileOpen(false)}
                         className={({ isActive }) => `nav-link ${isActive ? 'active' : ''} ${isMinimized ? 'justify-center' : ''}`}
                     >
                         <style>{`
@@ -56,7 +59,7 @@ const Sidebar = ({ isMobileOpen, setMobileOpen }) => {
                     </NavLink>
                 ))}
             </nav>
-            <div style={{padding: '0.5rem'}}>
+            <div style={{padding: '0.5rem'}} className="hidden md:block">
                 <button onClick={() => setIsMinimized(!isMinimized)} className="btn neumorph-outset" style={{padding: '0.75rem', width: '100%'}}>
                     {isMinimized ? <DoubleArrowRightIcon /> : <DoubleArrowLeftIcon />}
                 </button>
