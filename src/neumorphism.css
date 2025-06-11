@@ -1,21 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-
 :root {
   --font-family-main: 'Poppins', sans-serif;
   
   /* Light Mode Palette */
   --light-bg: #E0E5EC;
   --light-text: #5a6678;
+  --light-text-strong: #333d49;
   --light-primary: #4A90E2;
-  --light-primary-dark: #3a7ac2;
   --light-shadow-light: #ffffff;
   --light-shadow-dark: #a3b1c6;
 
   /* Dark Mode Palette */
   --dark-bg: #2C2F34;
   --dark-text: #a3b1c6;
+  --dark-text-strong: #e0e5ec;
   --dark-primary: #58a6ff;
-  --dark-primary-dark: #4a90e2;
   --dark-shadow-light: #363a40;
   --dark-shadow-dark: #222528;
 }
@@ -23,6 +21,7 @@
 body {
   font-family: var(--font-family-main);
   transition: background-color 0.3s ease, color 0.3s ease;
+  margin: 0;
 }
 
 /* Base styles for light mode */
@@ -30,6 +29,14 @@ body {
   background-color: var(--light-bg);
   color: var(--light-text);
 }
+
+/* Dark mode overrides */
+html.dark body {
+  background-color: var(--dark-bg);
+  color: var(--dark-text);
+}
+
+/* Base Neumorphic Styles */
 .neumorph-outset {
   background: var(--light-bg);
   border-radius: 20px;
@@ -37,35 +44,22 @@ body {
 }
 .neumorph-inset {
   border-radius: 12px;
-  box-shadow: inset 4px 4px 8px var(--light-shadow-dark), inset -4px -4px 8px var(--light-shadow-light);
+  box-shadow: inset 5px 5px 10px var(--light-shadow-dark), inset -5px -5px 10px var(--light-shadow-light);
 }
 
-/* Dark mode overrides */
-html.dark body {
-  background-color: var(--dark-bg);
-  color: var(--dark-text);
-}
+/* Dark Mode Neumorphic Styles */
 html.dark .neumorph-outset {
   background: var(--dark-bg);
   box-shadow: 6px 6px 12px var(--dark-shadow-dark), -6px -6px 12px var(--dark-shadow-light);
 }
 html.dark .neumorph-inset {
-  box-shadow: inset 4px 4px 8px var(--dark-shadow-dark), inset -4px -4px 8px var(--dark-shadow-light);
+  box-shadow: inset 5px 5px 10px var(--dark-shadow-dark), inset -5px -5px 10px var(--dark-shadow-light);
 }
 
+/* Utility classes */
+.text-strong { color: var(--light-text-strong); }
+html.dark .text-strong { color: var(--dark-text-strong); }
 .text-primary { color: var(--light-primary); }
 html.dark .text-primary { color: var(--dark-primary); }
-
-.btn-primary {
-  color: white;
-  background-color: var(--light-primary);
-}
-html.dark .btn-primary {
-  background-color: var(--dark-primary);
-}
-.btn-primary:hover {
-  background-color: var(--light-primary-dark);
-}
-html.dark .btn-primary:hover {
-  background-color: var(--dark-primary-dark);
-}
+.bg-primary { background-color: var(--light-primary); }
+html.dark .bg-primary { background-color: var(--dark-primary); }
