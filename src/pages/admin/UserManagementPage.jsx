@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { db } from '../../firebase';
-import { collection, query, where, getDocs, onSnapshot, doc, setDoc, updateDoc, deleteDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { collection, query, where, getDocs, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 
 // --- Reusable MultiSelect Dropdown Component ---
 const MultiSelectDropdown = ({ options, selected, onSelectionChange, placeholder }) => {
@@ -22,27 +22,28 @@ const MultiSelectDropdown = ({ options, selected, onSelectionChange, placeholder
     const selectedLabels = options.filter(o => selected.includes(o.value)).map(o => o.label).join(', ');
 
     return (
-        <div className="relative">
-            <button type="button" onClick={() => setIsOpen(!isOpen)} className="w-full p-3 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-left flex justify-between items-center">
-                <span className="truncate pr-2">{selectedLabels || placeholder}</span>
+        <div style={{position: 'relative'}}>
+            <button type="button" onClick={() => setIsOpen(!isOpen)} className="w-full p-3 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-left flex justify-between items-center neumorph-inset">
+                <span style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '1rem'}}>{selectedLabels || placeholder}</span>
                 <span>&#9662;</span>
             </button>
             {isOpen && (
-                <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg max-h-60 overflow-auto">
+                <div className="neumorph-outset" style={{position: 'absolute', zIndex: 20, width: '100%', marginTop: '0.5rem', maxHeight: '240px', overflowY: 'auto', borderRadius: '12px'}}>
                     <input 
                         type="text"
                         placeholder="Search..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full p-2 border-b dark:bg-gray-600 dark:border-gray-500"
+                        className="input-field"
+                        style={{padding: '0.75rem', borderBottom: '2px solid var(--light-bg)'}}
                     />
                     {filteredOptions.map(option => (
-                        <div key={option.value} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer flex items-center">
+                        <div key={option.value} onClick={() => handleToggleOption(option.value)} style={{padding: '0.75rem 1rem', cursor: 'pointer', display: 'flex', alignItems: 'center'}}>
                            <input 
                                 type="checkbox"
+                                readOnly
                                 checked={selected.includes(option.value)}
-                                onChange={() => handleToggleOption(option.value)}
-                                className="mr-2"
+                                style={{marginRight: '0.75rem'}}
                            />
                            {option.label}
                         </div>
@@ -52,7 +53,6 @@ const MultiSelectDropdown = ({ options, selected, onSelectionChange, placeholder
         </div>
     );
 };
-
 
 const UserManagementPage = () => {
   const [users, setUsers] = useState([]);
@@ -123,11 +123,9 @@ const UserManagementPage = () => {
             isAdmin: false,
             createdAt: serverTimestamp()
         });
-
-        // This requires a bit of a workaround since the new doc doesn't have an ID from a snapshot yet
-        // A better approach for production might involve a cloud function to handle this logic transactionally
-        const tempNewUser = { id: currentUser.email, ...currentUser };
-        const managers = getAllManagers(tempNewUser.id, [...users, tempNewUser]);
+        
+        const newUser = { id: currentUser.email, ...currentUser };
+        const managers = getAllManagers(newUser.id, [...users, newUser]);
         
         const batch = writeBatch(db);
         managers.forEach(manager => {
@@ -225,74 +223,77 @@ const UserManagementPage = () => {
 
   return (
     <>
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-        <div className="flex justify-between items-center mb-4">
-           <input
-            type="text"
-            placeholder="Search users by name or email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-1/3 p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-          />
-          <button onClick={openAddUserModal} className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">+ Add User</button>
+      <div className="neumorph-outset" style={{padding: '1.5rem'}}>
+        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem'}}>
+           <div className="neumorph-inset" style={{padding: '0.25rem', borderRadius: '12px', flexGrow: 1}}>
+             <input
+              type="text"
+              placeholder="Search users by name or email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="input-field"
+              style={{minWidth: '250px'}}
+            />
+           </div>
+          <button onClick={openAddUserModal} className="btn neumorph-outset" style={{color: 'var(--light-primary)', fontWeight: '600'}}>+ Add User</button>
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white dark:bg-gray-800">
-             <thead className="bg-gray-50 dark:bg-gray-700">
+        <div style={{overflowX: 'auto'}}>
+          <table style={{width: '100%', borderCollapse: 'separate', borderSpacing: '0 0.5rem'}}>
+             <thead>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Designation</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Mapped Projects</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                <th style={{padding: '0.75rem', textAlign: 'left'}} className="text-strong">Name</th>
+                <th style={{padding: '0.75rem', textAlign: 'left'}} className="text-strong">Designation</th>
+                <th style={{padding: '0.75rem', textAlign: 'left'}} className="text-strong">Mapped Projects</th>
+                <th style={{padding: '0.75rem', textAlign: 'right'}} className="text-strong">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {loading && <tr><td colSpan="4" className="text-center py-4 dark:text-gray-300">Loading users...</td></tr>}
+            <tbody>
+              {loading && <tr><td colSpan="4" style={{textAlign: 'center', padding: '1rem'}}>Loading users...</td></tr>}
               {!loading && paginatedUsers.map(user => (
-                <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{user.displayName || user.email}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{user.designation || 'Not Set'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                <tr key={user.id} className="neumorph-outset" style={{borderRadius: '12px'}}>
+                  <td style={{padding: '1rem'}}>{user.displayName || user.email}</td>
+                  <td style={{padding: '1rem'}}>{user.designation || 'Not Set'}</td>
+                  <td style={{padding: '1rem', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
                     {(user.mappedProjects || []).map(pId => projectMap[pId]).join(', ')}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
-                    <button onClick={() => openEditModal(user)} className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200">Edit</button>
-                    <button onClick={() => handleDeleteUser(user.id, user.displayName || user.email)} className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200">Delete</button>
+                  <td style={{padding: '1rem', textAlign: 'right'}}>
+                    <button onClick={() => openEditModal(user)} style={{marginRight: '1rem', fontWeight: 600}} className="text-primary">Edit</button>
+                    <button onClick={() => handleDeleteUser(user.id, user.displayName || user.email)} style={{fontWeight: 600, color: '#e53e3e'}}>Delete</button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <div className="flex justify-between items-center mt-4">
-            <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1} className="px-4 py-2 bg-gray-300 rounded-md disabled:opacity-50">Previous</button>
-            <span>Page {currentPage} of {Math.ceil(filteredUsers.length / itemsPerPage)}</span>
-            <button onClick={() => setCurrentPage(p => Math.min(p + 1, Math.ceil(filteredUsers.length / itemsPerPage)))} disabled={currentPage * itemsPerPage >= filteredUsers.length} className="px-4 py-2 bg-gray-300 rounded-md disabled:opacity-50">Next</button>
+        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem'}}>
+            <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1} className="btn neumorph-outset" style={{opacity: currentPage === 1 ? 0.5 : 1}}>Previous</button>
+            <span className="text-strong">Page {currentPage} of {Math.ceil(filteredUsers.length / itemsPerPage)}</span>
+            <button onClick={() => setCurrentPage(p => Math.min(p + 1, Math.ceil(filteredUsers.length / itemsPerPage)))} disabled={currentPage * itemsPerPage >= filteredUsers.length} className="btn neumorph-outset" style={{opacity: currentPage * itemsPerPage >= filteredUsers.length ? 0.5 : 1}}>Next</button>
         </div>
       </div>
       
       {isModalOpen && currentUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
-          <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-lg">
-            <h2 className="text-2xl font-bold mb-6 dark:text-white">{isEditing ? 'Edit User' : 'Add New User'}</h2>
-            <form onSubmit={handleFormSubmit} className="space-y-4">
-                <input type="email" name="email" value={currentUser.email} onChange={handleUserInputChange} placeholder="Email" required className="w-full p-3 border rounded dark:bg-gray-700 dark:border-gray-600" disabled={isEditing}/>
-                <input type="text" name="contactNumber" value={currentUser.contactNumber || ''} onChange={handleUserInputChange} placeholder="Contact Number (Optional)" className="w-full p-3 border rounded dark:bg-gray-700 dark:border-gray-600"/>
+          <div className="neumorph-outset" style={{padding: '2rem', width: '100%', maxWidth: '600px'}}>
+            <h2 style={{fontSize: '1.5rem', fontWeight: '700', marginBottom: '2rem'}} className="text-strong">{isEditing ? 'Edit User' : 'Add New User'}</h2>
+            <form onSubmit={handleFormSubmit} style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
+                <div className="neumorph-inset"><input type="email" name="email" value={currentUser.email} onChange={handleUserInputChange} placeholder="Email" required className="input-field" disabled={isEditing}/></div>
+                <div className="neumorph-inset"><input type="text" name="contactNumber" value={currentUser.contactNumber || ''} onChange={handleUserInputChange} placeholder="Contact Number (Optional)" className="input-field"/></div>
                 <div>
-                    <label className="block mb-1 font-medium dark:text-gray-300">Designation</label>
-                    <select name="designation" value={currentUser.designation} onChange={handleUserInputChange} className="w-full p-3 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <label className="text-strong" style={{marginBottom: '0.5rem', display: 'block'}}>Designation</label>
+                    <div className="neumorph-inset"><select name="designation" value={currentUser.designation} onChange={handleUserInputChange} className="input-field">
                         {designations.map(d => <option key={d} value={d}>{d}</option>)}
-                    </select>
+                    </select></div>
                 </div>
                  <div>
-                    <label className="block mb-1 font-medium dark:text-gray-300">Reporting To</label>
-                    <select name="reportingTo" value={currentUser.reportingTo} onChange={handleUserInputChange} className="w-full p-3 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <label className="text-strong" style={{marginBottom: '0.5rem', display: 'block'}}>Reporting To</label>
+                    <div className="neumorph-inset"><select name="reportingTo" value={currentUser.reportingTo} onChange={handleUserInputChange} className="input-field">
                         <option value="">None</option>
                         {users.filter(u => u.id !== currentUser.id && u.reportingTo !== currentUser.id).map(u => <option key={u.id} value={u.id}>{u.displayName || u.email}</option>)}
-                    </select>
+                    </select></div>
                 </div>
                 <div>
-                    <label className="block mb-1 font-medium dark:text-gray-300">Mapped Projects</label>
+                    <label className="text-strong" style={{marginBottom: '0.5rem', display: 'block'}}>Mapped Projects</label>
                     <MultiSelectDropdown 
                         options={projectOptions}
                         selected={currentUser.mappedProjects}
@@ -300,9 +301,9 @@ const UserManagementPage = () => {
                         placeholder="Select projects..."
                     />
                 </div>
-              <div className="flex justify-end mt-6 space-x-4">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-600 dark:text-gray-200">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded bg-blue-600 text-white">{isEditing ? 'Save Changes' : 'Add User'}</button>
+              <div style={{display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem'}}>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="btn neumorph-outset">Cancel</button>
+                <button type="submit" className="btn neumorph-outset btn-primary">{isEditing ? 'Save Changes' : 'Add User'}</button>
               </div>
             </form>
           </div>
