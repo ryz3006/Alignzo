@@ -8,12 +8,12 @@ const DashboardIcon = () => <svg style={{height: '1.5rem', width: '1.5rem'}} fil
 const ProjectsIcon = () => <svg style={{height: '1.5rem', width: '1.5rem'}} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>;
 const UsersIcon = () => <svg style={{height: '1.5rem', width: '1.5rem'}} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21a6 6 0 00-9-5.197M15 21a6 6 0 006-6v-1a6 6 0 00-9-5.197" /></svg>;
 const SettingsIcon = () => <svg style={{height: '1.5rem', width: '1.5rem'}} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>;
-const DoubleArrowLeftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{width: '1.5rem', height: '1.5rem'}}><path strokeLinecap="round" strokeLinejoin="round" d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5" /></svg>;
-const DoubleArrowRightIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{width: '1.5rem', height: '1.5rem'}}><path strokeLinecap="round" strokeLinejoin="round" d="M5.25 4.5l7.5 7.5-7.5 7.5m6-15l7.5 7.5-7.5 7.5" /></svg>;
+const DoubleArrowLeftIcon = () => <svg style={{width: '1.5rem', height: '1.5rem'}} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5" /></svg>;
+const DoubleArrowRightIcon = () => <svg style={{width: '1.5rem', height: '1.5rem'}} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M5.25 4.5l7.5 7.5-7.5 7.5m6-15l7.5 7.5-7.5 7.5" /></svg>;
 
-const Sidebar = () => {
-    const { isAdmin } = useAuth();
+const Sidebar = ({ isMobileOpen, setMobileOpen }) => {
     const [isMinimized, setIsMinimized] = useState(false);
+    const { isAdmin } = useAuth();
 
     const adminNavItems = [
         { to: "/admin/dashboard", label: "Dashboard", icon: <DashboardIcon /> },
@@ -26,8 +26,13 @@ const Sidebar = () => {
     ];
     const navItems = isAdmin ? adminNavItems : publicNavItems;
     
+    const sidebarClasses = `neumorph-outset flex flex-col p-4 transition-all duration-300 ease-in-out z-20 flex-shrink-0 
+        ${isMinimized ? 'w-24' : 'w-64'} 
+        md:relative md:translate-x-0 
+        absolute inset-y-0 left-0 transform ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}`;
+
     return (
-        <aside className="neumorph-outset" style={{display: 'flex', flexDirection: 'column', padding: '1rem', transition: 'width 0.3s ease-in-out', width: isMinimized ? '100px' : '260px', zIndex: 10, flexShrink: 0}}>
+        <aside className={sidebarClasses}>
             <div style={{height: '3rem', marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                 <img src={isMinimized ? LogoOnly : LogoWithName} alt="Alignzo Logo" style={{height: '2.5rem', transition: 'all 0.3s'}} />
             </div>
@@ -36,7 +41,7 @@ const Sidebar = () => {
                     <NavLink
                         key={item.label}
                         to={item.to}
-                        className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                        className={({ isActive }) => `nav-link ${isActive ? 'active' : ''} ${isMinimized ? 'justify-center' : ''}`}
                     >
                         <style>{`
                             .nav-link { display: flex; align-items: center; padding: 0.75rem; border-radius: 12px; transition: all 0.2s ease; color: var(--light-text); text-decoration: none; }
@@ -51,9 +56,11 @@ const Sidebar = () => {
                     </NavLink>
                 ))}
             </nav>
-            <button onClick={() => setIsMinimized(!isMinimized)} className="btn neumorph-outset" style={{padding: '0.75rem'}}>
-                {isMinimized ? <DoubleArrowRightIcon /> : <DoubleArrowLeftIcon />}
-            </button>
+            <div style={{padding: '0.5rem'}}>
+                <button onClick={() => setIsMinimized(!isMinimized)} className="btn neumorph-outset" style={{padding: '0.75rem', width: '100%'}}>
+                    {isMinimized ? <DoubleArrowRightIcon /> : <DoubleArrowLeftIcon />}
+                </button>
+            </div>
         </aside>
     );
 };
