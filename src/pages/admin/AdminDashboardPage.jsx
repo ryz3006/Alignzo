@@ -53,7 +53,7 @@ const UserNode = ({ user, allUsers, level }) => {
 const DashboardTabButton = ({ active, onClick, children, icon }) => (
     <button type="button" onClick={onClick} className={`dashboard-tab-btn ${active ? 'active' : ''}`}>
         <span style={{width: '24px', height: '24px'}}>{icon}</span>
-        <span style={{ display: window.innerWidth < 768 ? 'none' : 'inline' }}>{children}</span>
+        <span className="hidden md:inline">{children}</span>
     </button>
 );
 
@@ -155,7 +155,7 @@ const AdminDashboardPage = () => {
     };
 
     const downloadAsPdf = (data, title, filename) => {
-        if (typeof window.jspdf === 'undefined') return alert("PDF library not loaded yet. Please try again in a moment.");
+        if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') return alert("PDF library not loaded yet. Please try again in a moment.");
         if (data.length === 0) return alert("No data available to download.");
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
@@ -245,8 +245,8 @@ const AdminDashboardPage = () => {
         <div>
             <div style={{display: 'flex', gap: '1rem', marginBottom: '1.5rem'}}>
                 <DashboardTabButton active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} icon={<span>&#128202;</span>}>Overview</DashboardTabButton>
-                <DashboardTabButton active={activeTab === 'hierarchy'} onClick={() => setActiveTab('hierarchy')} icon={<span>&#128101;</span>}>User Hierarchy</DashboardTabButton>
-                <DashboardTabButton active={activeTab === 'escalation'} onClick={() => setActiveTab('escalation')} icon={<span>&#128226;</span>}>Escalation Matrix</DashboardTabButton>
+                <DashboardTabButton active={activeTab === 'hierarchy'} onClick={() => setActiveTab('hierarchy')} icon={<span>&#128101;</span>}>Hierarchy</DashboardTabButton>
+                <DashboardTabButton active={activeTab === 'escalation'} onClick={() => setActiveTab('escalation')} icon={<span>&#128226;</span>}>Escalation</DashboardTabButton>
             </div>
             <div>
                 {renderContent()}
