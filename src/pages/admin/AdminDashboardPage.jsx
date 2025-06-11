@@ -6,30 +6,30 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 
-// --- Reusable Component for Stat Tiles ---
 const StatTile = ({ title, value, icon, onClick }) => (
-    <div onClick={onClick} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer">
-      <div className="flex items-center space-x-4">
-        <div className="bg-blue-100 dark:bg-blue-900/50 p-4 rounded-full">{icon}</div>
+    <div onClick={onClick} className="neumorph-outset" style={{padding: '1.5rem', cursor: 'pointer', transition: 'transform 0.2s ease'}}>
+      <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
+        <div className="neumorph-outset" style={{width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem'}}>
+          {icon}
+        </div>
         <div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{title}</p>
-          <p className="text-3xl font-bold text-gray-900 dark:text-white">{value}</p>
+          <p style={{margin: 0, fontSize: '0.9rem'}}>{title}</p>
+          <p style={{margin: '0', fontSize: '2rem', fontWeight: '700'}} className="text-primary">{value}</p>
         </div>
       </div>
     </div>
 );
 
-// --- Reusable Component for Displaying User Hierarchy Nodes ---
 const UserNode = ({ user, allUsers, level }) => {
     const subordinates = allUsers.filter(u => u.reportingTo === user.id);
     return (
-        <div style={{ marginLeft: `${level * 20}px` }} className="my-2">
-            <div className="flex items-center bg-white dark:bg-gray-700 p-2 rounded-md shadow-sm">
-                <div className="font-semibold text-gray-800 dark:text-white">{user.displayName || user.email}</div>
-                <div className="ml-2 text-xs text-gray-500 dark:text-gray-400">({user.designation || 'N/A'})</div>
+        <div style={{ marginLeft: `${level * 25}px`, marginTop: '0.5rem' }}>
+            <div className="neumorph-inset" style={{padding: '0.5rem 1rem', borderRadius: '8px', display: 'flex', alignItems: 'center'}}>
+                <span style={{fontWeight: '600'}} className="text-strong">{user.displayName || user.email}</span>
+                <span style={{marginLeft: '0.5rem', fontSize: '0.8rem'}}>({user.designation || 'N/A'})</span>
             </div>
             {subordinates.length > 0 && (
-                <div className="border-l-2 border-blue-500 pl-4">
+                <div style={{borderLeft: '2px solid var(--light-primary)', paddingLeft: '20px', marginTop: '0.5rem'}}>
                     {subordinates.map(sub => <UserNode key={sub.id} user={sub} allUsers={allUsers} level={level + 1} />)}
                 </div>
             )}
@@ -37,7 +37,6 @@ const UserNode = ({ user, allUsers, level }) => {
     );
 };
 
-// --- Main Dashboard Page Component ---
 const AdminDashboardPage = () => {
     const [activeTab, setActiveTab] = useState('overview');
     const [users, setUsers] = useState([]);
@@ -138,52 +137,51 @@ const AdminDashboardPage = () => {
         switch (activeTab) {
             case 'hierarchy':
                 return (
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-                        <div className="flex justify-end gap-2 mb-4">
-                            <button onClick={() => downloadAsExcel(hierarchyData, 'user-hierarchy', 'User Hierarchy')} className="px-3 py-1 bg-green-600 text-white rounded-md text-sm">Download Excel</button>
-                            <button onClick={() => downloadAsPdf(hierarchyData, 'User Hierarchy', 'user-hierarchy')} className="px-3 py-1 bg-red-600 text-white rounded-md text-sm">Download PDF</button>
+                    <div className="neumorph-outset" style={{padding: '1.5rem'}}>
+                        <div style={{display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginBottom: '1rem'}}>
+                            <button onClick={() => downloadAsExcel(hierarchyData, 'user-hierarchy', 'User Hierarchy')} className="btn neumorph-outset" style={{fontSize: '0.8rem', padding: '8px 12px'}}>Download Excel</button>
+                            <button onClick={() => downloadAsPdf(hierarchyData, 'User Hierarchy', 'user-hierarchy')} className="btn neumorph-outset" style={{fontSize: '0.8rem', padding: '8px 12px'}}>Download PDF</button>
                         </div>
                         {users.filter(u => !u.reportingTo).map(user => <UserNode key={user.id} user={user} allUsers={users} level={0} />)}
                     </div>
                 );
             case 'escalation':
                 return (
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-                        <div className="flex items-center justify-between mb-4">
-                            <div>
-                                <label htmlFor="project-select" className="mr-4 font-semibold dark:text-white">Select a Project:</label>
-                                <select id="project-select" value={selectedProjectId} onChange={e => setSelectedProjectId(e.target.value)} className="p-2 rounded-md dark:bg-gray-700 dark:text-white border dark:border-gray-600">
-                                    <option value="">-- Select --</option>
+                    <div className="neumorph-outset" style={{padding: '1.5rem'}}>
+                        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem'}}>
+                            <div className="neumorph-inset" style={{padding: '0.25rem', borderRadius: '12px'}}>
+                                <select id="project-select" value={selectedProjectId} onChange={e => setSelectedProjectId(e.target.value)} className="input-field" style={{paddingRight: '2rem'}}>
+                                    <option value="">-- Select a Project --</option>
                                     {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                                 </select>
                             </div>
                             {selectedProjectId && (
-                                <div className="flex gap-2">
-                                    <button onClick={() => downloadAsExcel(escalationMatrix, 'escalation-matrix', `Escalation Matrix: ${selectedProject.name}`)} className="px-3 py-1 bg-green-600 text-white rounded-md text-sm">Download Excel</button>
-                                    <button onClick={() => downloadAsPdf(escalationMatrix, `Escalation Matrix: ${selectedProject.name}`, 'escalation-matrix')} className="px-3 py-1 bg-red-600 text-white rounded-md text-sm">Download PDF</button>
+                                <div style={{display: 'flex', gap: '0.5rem'}}>
+                                    <button onClick={() => downloadAsExcel(escalationMatrix, 'escalation-matrix', `Escalation Matrix: ${selectedProject.name}`)} className="btn neumorph-outset" style={{fontSize: '0.8rem', padding: '8px 12px'}}>Download Excel</button>
+                                    <button onClick={() => downloadAsPdf(escalationMatrix, `Escalation Matrix: ${selectedProject.name}`, 'escalation-matrix')} className="btn neumorph-outset" style={{fontSize: '0.8rem', padding: '8px 12px'}}>Download PDF</button>
                                 </div>
                             )}
                         </div>
                         {selectedProjectId && (
                             <div className="overflow-x-auto">
-                                <table className="min-w-full">
-                                    <thead className="bg-gray-50 dark:bg-gray-700">
+                                <table style={{width: '100%', borderCollapse: 'separate', borderSpacing: '0 0.5rem'}}>
+                                    <thead>
                                         <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Level</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">User</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Designation</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Email</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Contact Number</th>
+                                            <th style={{padding: '0.75rem', textAlign: 'left'}}>Level</th>
+                                            <th style={{padding: '0.75rem', textAlign: 'left'}}>User</th>
+                                            <th style={{padding: '0.75rem', textAlign: 'left'}}>Designation</th>
+                                            <th style={{padding: '0.75rem', textAlign: 'left'}}>Email</th>
+                                            <th style={{padding: '0.75rem', textAlign: 'left'}}>Contact</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                                    <tbody>
                                         {escalationMatrix.map((item, index) => (
-                                            <tr key={item.email + index}>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{item.Level}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{item.User}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{item.Designation}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{item.Email}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{item['Contact Number']}</td>
+                                            <tr key={item.email + index} className="neumorph-outset">
+                                                <td style={{padding: '1rem'}}>{item.Level}</td>
+                                                <td style={{padding: '1rem'}}>{item.User}</td>
+                                                <td style={{padding: '1rem'}}>{item.Designation}</td>
+                                                <td style={{padding: '1rem'}}>{item.Email}</td>
+                                                <td style={{padding: '1rem'}}>{item['Contact Number']}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -195,34 +193,26 @@ const AdminDashboardPage = () => {
             case 'overview':
             default:
                 return (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <StatTile title="Total Projects" value={projects.length} onClick={() => navigate('/admin/projects')} icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>} />
-                      <StatTile title="Total Users" value={users.length} onClick={() => navigate('/admin/users')} icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21a6 6 0 00-9-5.197M15 21a6 6 0 006-6v-1a6 6 0 00-9-5.197" /></svg>} />
+                    <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem'}}>
+                      <StatTile title="Total Projects" value={projects.length} onClick={() => navigate('/admin/projects')} icon={<span>&#128188;</span>} />
+                      <StatTile title="Total Users" value={users.length} onClick={() => navigate('/admin/users')} icon={<span>&#128101;</span>} />
                     </div>
                 );
         }
     };
     
-    const TabButton = ({ name, label }) => (
-        <button onClick={() => setActiveTab(name)} className={`px-4 py-2 text-sm font-medium rounded-t-lg ${activeTab === name ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}>
-            {label}
-        </button>
+    return (
+        <div>
+            <div className="neumorph-inset" style={{display: 'flex', borderRadius: '15px', padding: '0.5rem', marginBottom: '1.5rem'}}>
+                <button onClick={() => setActiveTab('overview')} className={`btn ${activeTab === 'overview' ? 'neumorph-outset text-primary' : ''}`} style={{flex: 1}}>Overview</button>
+                <button onClick={() => setActiveTab('hierarchy')} className={`btn ${activeTab === 'hierarchy' ? 'neumorph-outset text-primary' : ''}`} style={{flex: 1}}>User Hierarchy</button>
+                <button onClick={() => setActiveTab('escalation')} className={`btn ${activeTab === 'escalation' ? 'neumorph-outset text-primary' : ''}`} style={{flex: 1}}>Escalation Matrix</button>
+            </div>
+            <div>
+                {renderContent()}
+            </div>
+        </div>
     );
-
-  return (
-    <div className="flex flex-col">
-        <div className="border-b border-gray-200 dark:border-gray-700">
-            <nav className="flex space-x-2">
-                <TabButton name="overview" label="Overview" />
-                <TabButton name="hierarchy" label="User Hierarchy" />
-                <TabButton name="escalation" label="Project Escalation Matrix" />
-            </nav>
-        </div>
-        <div className="mt-6">
-            {renderContent()}
-        </div>
-    </div>
-  );
 };
 
 export default AdminDashboardPage;
