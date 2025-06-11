@@ -27,7 +27,7 @@ const Sidebar = ({ isMobileOpen, setMobileOpen }) => {
     const navItems = isAdmin ? adminNavItems : publicNavItems;
     
     return (
-        <aside className={`neumorph-outset flex flex-col p-2 transition-all duration-300 ease-in-out z-20 flex-shrink-0 absolute md:relative inset-y-0 left-0 transform ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`} style={{width: isMinimized ? '80px' : '260px', borderRadius: 0}}>
+        <aside className={`neumorph-outset flex flex-col p-2 transition-all duration-300 ease-in-out z-20 flex-shrink-0 absolute md:relative inset-y-0 left-0 transform ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`} style={{width: isMinimized ? '80px' : '260px', borderRadius: '0'}}>
             <style>{`
                 .nav-link { display: flex; align-items: center; padding: 0.75rem; border-radius: 12px; transition: all 0.2s ease; color: var(--light-text); text-decoration: none; }
                 html.dark .nav-link { color: var(--dark-text); }
