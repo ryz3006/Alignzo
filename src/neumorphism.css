@@ -125,3 +125,43 @@ html.dark .modern-tab:hover, html.dark .modern-tab.active {
     color: var(--dark-bg);
     box-shadow: 0px 15px 20px rgba(88, 166, 255, 0.2);
 }
+
+/* --- New Animated Tab Styles --- */
+.animated-tabs-container {
+    position: relative;
+    display: flex;
+    padding: 5px;
+    border-radius: 40px;
+}
+.animated-tab {
+    position: relative;
+    z-index: 1;
+    padding: 1em 1.5em;
+    flex: 1;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.4s ease-in-out;
+    white-space: nowrap;
+}
+.animated-tab.active {
+    color: white;
+}
+html.dark .animated-tab.active {
+    color: var(--dark-text-strong);
+}
+
+.tab-glider {
+    position: absolute;
+    top: 5px;
+    height: calc(100% - 10px);
+    border-radius: 40px;
+    background-color: var(--light-primary);
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+html.dark .tab-glider {
+    background-color: var(--dark-primary);
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.3);
+}
