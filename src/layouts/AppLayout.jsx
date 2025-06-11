@@ -14,7 +14,7 @@ const AppLayout = () => {
     const [isSidebarOpen, setSidebarOpen] = useState(false);
 
     return (
-        <div style={{display: 'flex', height: '100vh', backgroundColor: 'var(--light-bg)'}} className="dark:bg-[var(--dark-bg)]">
+        <div style={{display: 'flex', height: '100vh'}}>
             <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
             <div style={{flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden'}}>
                 <Header onMenuClick={() => setSidebarOpen(true)} />
@@ -30,7 +30,7 @@ const AppLayout = () => {
                         ) : (
                             <>
                                 <Route path="user/dashboard" element={<PublicDashboardPage />} />
-                                {/* ...other public routes... */}
+                                {/* Add other public routes here */}
                             </>
                         )}
                     </Routes>
