@@ -37,8 +37,8 @@ const UserNode = ({ user, allUsers, level }) => {
 };
 
 const DashboardTabButton = ({ active, onClick, children, icon }) => (
-    <button type="button" onClick={onClick} className={`tab-btn ${active ? 'active' : ''}`}>
-        <div style={{width: '24px', height: '24px'}}>{icon}</div>
+    <button type="button" onClick={onClick} className={`dashboard-tab-btn ${active ? 'active' : ''}`}>
+        <span style={{width: '24px', height: '24px'}}>{icon}</span>
         <span className="hidden md:inline">{children}</span>
     </button>
 );
@@ -124,7 +124,7 @@ const AdminDashboardPage = () => {
     }, [selectedProjectId, users, designations, selectedProject]);
 
     const downloadAsExcel = (data, filename, title) => {
-        if (typeof window.XLSX === 'undefined') return alert("Excel library not loaded. Please try again.");
+        if (typeof window.XLSX === 'undefined') return alert("Excel library not loaded. Please try again in a moment.");
         if (data.length === 0) return alert("No data available to download.");
         const timestamp = `Downloaded from Alignzo dashboard at ${new Date().toLocaleString()}`;
         const finalData = [[title], [timestamp], []].concat([Object.keys(data[0])]).concat(data.map(row => Object.values(row)));
@@ -135,19 +135,13 @@ const AdminDashboardPage = () => {
     };
 
     const downloadAsPdf = (data, title, filename) => {
-        if (typeof window.jspdf === 'undefined') return alert("PDF library not loaded. Please try again.");
-        if (data.length === 0) return alert("No data available to download.");
+        if (typeof window.jspdf === 'undefined') return alert("PDF library not loaded. Please try again in a moment.");
+        if (data.length === 0) return alert("No data to download.");
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-
-        if (typeof doc.autoTable !== 'function') return alert("Could not generate PDF table. Plugin is missing.");
-
+        if (typeof doc.autoTable !== 'function') return alert("Could not generate PDF table. The AutoTable plugin is missing.");
         doc.text(title, 14, 16);
-        doc.autoTable({
-            startY: 22,
-            head: [Object.keys(data[0])],
-            body: data.map(Object.values),
-        });
+        doc.autoTable({ startY: 22, head: [Object.keys(data[0])], body: data.map(Object.values) });
         doc.setFontSize(8);
         doc.text(`Downloaded from Alignzo dashboard at ${new Date().toLocaleString()}`, 14, doc.internal.pageSize.height - 10);
         doc.save(`${filename}.pdf`);
