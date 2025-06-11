@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../firebase';
-import { collection, doc, onSnapshot } from 'firebase/firestore';
+import { collection, doc, onSnapshot, query, where, getDocs } from 'firebase/firestore';
 
 // Helper function to dynamically load scripts if they aren't already loaded
 const loadScript = (src) => {
