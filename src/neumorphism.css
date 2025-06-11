@@ -6,6 +6,7 @@
   --light-text: #5a6678;
   --light-text-strong: #333d49;
   --light-primary: #4A90E2;
+  --light-primary-dark: #3a7ac2;
   --light-shadow-light: #ffffff;
   --light-shadow-dark: #a3b1c6;
 
@@ -14,6 +15,7 @@
   --dark-text: #a3b1c6;
   --dark-text-strong: #e0e5ec;
   --dark-primary: #58a6ff;
+  --dark-primary-dark: #4a90e2;
   --dark-shadow-light: #363a40;
   --dark-shadow-dark: #222528;
 }
@@ -22,6 +24,8 @@ body {
   font-family: var(--font-family-main);
   transition: background-color 0.3s ease, color 0.3s ease;
   margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 /* Base styles for light mode */
@@ -29,37 +33,74 @@ body {
   background-color: var(--light-bg);
   color: var(--light-text);
 }
-
-/* Dark mode overrides */
-html.dark body {
-  background-color: var(--dark-bg);
-  color: var(--dark-text);
-}
-
-/* Base Neumorphic Styles */
 .neumorph-outset {
   background: var(--light-bg);
   border-radius: 20px;
-  box-shadow: 6px 6px 12px var(--light-shadow-dark), -6px -6px 12px var(--light-shadow-light);
+  box-shadow: 8px 8px 15px var(--light-shadow-dark), -8px -8px 15px var(--light-shadow-light);
 }
 .neumorph-inset {
   border-radius: 12px;
   box-shadow: inset 5px 5px 10px var(--light-shadow-dark), inset -5px -5px 10px var(--light-shadow-light);
 }
 
-/* Dark Mode Neumorphic Styles */
+/* Dark mode overrides */
+html.dark body {
+  background-color: var(--dark-bg);
+  color: var(--dark-text);
+}
 html.dark .neumorph-outset {
   background: var(--dark-bg);
-  box-shadow: 6px 6px 12px var(--dark-shadow-dark), -6px -6px 12px var(--dark-shadow-light);
+  box-shadow: 8px 8px 15px var(--dark-shadow-dark), -8px -8px 15px var(--dark-shadow-light);
 }
 html.dark .neumorph-inset {
   box-shadow: inset 5px 5px 10px var(--dark-shadow-dark), inset -5px -5px 10px var(--dark-shadow-light);
 }
 
-/* Utility classes */
-.text-strong { color: var(--light-text-strong); }
-html.dark .text-strong { color: var(--dark-text-strong); }
 .text-primary { color: var(--light-primary); }
 html.dark .text-primary { color: var(--dark-primary); }
-.bg-primary { background-color: var(--light-primary); }
-html.dark .bg-primary { background-color: var(--dark-primary); }
+
+.btn {
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn:active {
+  box-shadow: inset 4px 4px 8px var(--light-shadow-dark), inset -4px -4px 8px var(--light-shadow-light) !important;
+}
+html.dark .btn:active {
+  box-shadow: inset 4px 4px 8px var(--dark-shadow-dark), inset -4px -4px 8px var(--dark-shadow-light) !important;
+}
+.btn-primary {
+  color: white;
+  background-color: var(--light-primary);
+}
+html.dark .btn-primary {
+  background-color: var(--dark-primary);
+}
+.btn-primary:hover {
+  background-color: var(--light-primary-dark);
+}
+html.dark .btn-primary:hover {
+  background-color: var(--dark-primary-dark);
+}
+
+.input-field {
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background-color: transparent;
+  color: var(--light-text);
+}
+html.dark .input-field {
+    color: var(--dark-text);
+}
+.input-field:focus {
+  outline: none;
+}
