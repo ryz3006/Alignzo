@@ -11,13 +11,13 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 
 const AppLayout = () => {
     const { isAdmin } = useAuth();
-    const [isSidebarOpen, setSidebarOpen] = useState(false);
+    const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
     return (
-        <div style={{display: 'flex', height: '100vh'}}>
-            <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+        <div style={{display: 'flex', height: '100vh', backgroundColor: 'var(--light-bg)'}} className="dark:bg-[var(--dark-bg)]">
+            <Sidebar isMobileOpen={isMobileSidebarOpen} setMobileOpen={setMobileSidebarOpen} />
             <div style={{flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden'}}>
-                <Header onMenuClick={() => setSidebarOpen(true)} />
+                <Header onMenuClick={() => setMobileSidebarOpen(!isMobileSidebarOpen)} />
                 <main style={{flex: 1, overflowX: 'hidden', overflowY: 'auto', padding: '1.5rem'}}>
                     <Routes>
                         {isAdmin ? (
@@ -30,7 +30,7 @@ const AppLayout = () => {
                         ) : (
                             <>
                                 <Route path="user/dashboard" element={<PublicDashboardPage />} />
-                                {/* Add other public routes here */}
+                                {/* ...other public routes... */}
                             </>
                         )}
                     </Routes>
