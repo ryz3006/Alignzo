@@ -3,6 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { db } from '../../firebase';
 import { collection, doc, onSnapshot } from 'firebase/firestore';
 
+// Helper function to dynamically load scripts if they aren't already loaded
+const loadScript = (src) => {
+    return new Promise((resolve, reject) => {
+        if (document.querySelector(`script[src="${src}"]`)) {
+            return resolve();
+        }
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error(`Script load error for ${src}`));
+        document.body.appendChild(script);
+    });
+};
+
 // --- Reusable Styled Components for this page ---
 
 const StatTile = ({ title, value, icon, onClick }) => (
@@ -59,6 +73,12 @@ const AdminDashboardPage = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
+        Promise.all([
+            loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"),
+            loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"),
+            loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js")
+        ]).catch(error => console.error("Could not load download scripts:", error));
+
         const unsubUsers = onSnapshot(collection(db, "users"), snap => setUsers(snap.docs.map(d => ({id: d.id, ...d.data()}))));
         const unsubProjects = onSnapshot(collection(db, "projects"), snap => setProjects(snap.docs.map(d => ({id: d.id, ...d.data()}))));
         const unsubDesignations = onSnapshot(doc(db, 'settings', 'designations'), d => setDesignations(d.exists() ? d.data().list : []));
@@ -124,7 +144,7 @@ const AdminDashboardPage = () => {
     }, [selectedProjectId, users, designations, selectedProject]);
 
     const downloadAsExcel = (data, filename, title) => {
-        if (typeof window.XLSX === 'undefined') return alert("Excel library not loaded. Please try again in a moment.");
+        if (typeof window.XLSX === 'undefined') return alert("Excel library not loaded yet. Please try again.");
         if (data.length === 0) return alert("No data available to download.");
         const timestamp = `Downloaded from Alignzo dashboard at ${new Date().toLocaleString()}`;
         const finalData = [[title], [timestamp], []].concat([Object.keys(data[0])]).concat(data.map(row => Object.values(row)));
@@ -135,13 +155,19 @@ const AdminDashboardPage = () => {
     };
 
     const downloadAsPdf = (data, title, filename) => {
-        if (typeof window.jspdf === 'undefined') return alert("PDF library not loaded. Please try again in a moment.");
-        if (data.length === 0) return alert("No data to download.");
+        if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') return alert("PDF library not loaded yet. Please try again in a moment.");
+        if (data.length === 0) return alert("No data available to download.");
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
+
         if (typeof doc.autoTable !== 'function') return alert("Could not generate PDF table. The AutoTable plugin is missing.");
+        
         doc.text(title, 14, 16);
-        doc.autoTable({ startY: 22, head: [Object.keys(data[0])], body: data.map(Object.values) });
+        doc.autoTable({
+            startY: 22,
+            head: [Object.keys(data[0])],
+            body: data.map(Object.values),
+        });
         doc.setFontSize(8);
         doc.text(`Downloaded from Alignzo dashboard at ${new Date().toLocaleString()}`, 14, doc.internal.pageSize.height - 10);
         doc.save(`${filename}.pdf`);
@@ -219,8 +245,8 @@ const AdminDashboardPage = () => {
         <div>
             <div style={{display: 'flex', gap: '1rem', marginBottom: '1.5rem'}}>
                 <DashboardTabButton active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} icon={<span>&#128202;</span>}>Overview</DashboardTabButton>
-                <DashboardTabButton active={activeTab === 'hierarchy'} onClick={() => setActiveTab('hierarchy')} icon={<span>&#128101;</span>}>User Hierarchy</DashboardTabButton>
-                <DashboardTabButton active={activeTab === 'escalation'} onClick={() => setActiveTab('escalation')} icon={<span>&#128226;</span>}>Escalation Matrix</DashboardTabButton>
+                <DashboardTabButton active={activeTab === 'hierarchy'} onClick={() => setActiveTab('hierarchy')} icon={<span>&#128101;</span>}>Hierarchy</DashboardTabButton>
+                <DashboardTabButton active={activeTab === 'escalation'} onClick={() => setActiveTab('escalation')} icon={<span>&#128226;</span>}>Escalation</DashboardTabButton>
             </div>
             <div>
                 {renderContent()}
