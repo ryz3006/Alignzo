@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../../firebase';
-import { doc, getDoc, collection, query, where } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
+import LogoOnly from '../../assets/images/Logo_only.png';
 
 const ProjectSelectionPage = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
   const user = auth.currentUser;
 
@@ -16,8 +18,8 @@ const ProjectSelectionPage = () => {
     }
 
     const fetchUserAndProjects = async () => {
+      setError('');
       try {
-        // Use a direct 'get' on the user's document using their email as the ID
         const userDocRef = doc(db, "users", user.email);
         const userDocSnap = await getDoc(userDocRef);
 
@@ -26,7 +28,6 @@ const ProjectSelectionPage = () => {
           const projectIds = userData.mappedProjects || [];
 
           if (projectIds.length > 0) {
-            // Fetch each project document individually using getDoc
             const projectPromises = projectIds.map(id => getDoc(doc(db, "projects", id)));
             const projectSnapshots = await Promise.all(projectPromises);
             
@@ -36,17 +37,14 @@ const ProjectSelectionPage = () => {
               
             setProjects(userProjects);
           } else {
-             // If user exists but has no projects
              navigate('/no-projects');
           }
         } else {
-            // If the user document doesn't exist at all
             navigate('/no-projects');
         }
       } catch (error) {
           console.error("Error fetching user projects:", error);
-          // Redirect to no-projects page on any error, including permission denied
-          navigate('/no-projects');
+          setError("Could not load your projects. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -60,23 +58,37 @@ const ProjectSelectionPage = () => {
     navigate('/user/dashboard');
   };
 
-  if (loading) {
-      return <div className="dark:text-white text-center p-10">Loading projects...</div>;
-  }
-
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
-        <div className="w-full max-w-lg p-8 space-y-6 bg-white rounded-lg shadow-md dark:bg-gray-800">
-            <h1 className="text-2xl font-bold text-center dark:text-white">Select a Project</h1>
-            <div className="space-y-4">
-                {projects.map(project => (
-                    <button key={project.id} onClick={() => selectProject(project.id)} className="w-full p-4 text-left bg-gray-50 dark:bg-gray-700 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg transition-colors">
-                        <p className="font-semibold text-lg dark:text-white">{project.name}</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{project.projectCode}</p>
-                    </button>
-                ))}
+    <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '1rem'}}>
+      <div className="neumorph-outset" style={{width: '100%', maxWidth: '600px', padding: '2rem'}}>
+        <div style={{textAlign: 'center', marginBottom: '2rem'}}>
+            <div className="neumorph-outset" style={{width: '90px', height: '90px', margin: '0 auto', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                <img src={LogoOnly} alt="Alignzo Logo" style={{width: '50px', height: '50px'}} />
             </div>
+            <h1 className="text-primary" style={{fontSize: '2rem', fontWeight: '700', marginTop: '1rem'}}>Select Your Project</h1>
+            <p style={{marginTop: '0.5rem', fontWeight: 500}}>Choose a project to continue to your dashboard.</p>
         </div>
+        
+        {loading && <p style={{textAlign: 'center'}}>Loading projects...</p>}
+        {error && <p style={{color: 'red', textAlign: 'center'}}>{error}</p>}
+        
+        <div style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
+            {!loading && projects.map(project => (
+                <button 
+                    key={project.id} 
+                    onClick={() => selectProject(project.id)} 
+                    className="btn neumorph-outset"
+                    style={{justifyContent: 'flex-start', textAlign: 'left'}}
+                >
+                    <div style={{flexGrow: 1}}>
+                        <p style={{margin: 0, fontWeight: '600'}} className="text-strong">{project.name}</p>
+                        <p style={{margin: '0.25rem 0 0 0', fontSize: '0.8rem', fontFamily: 'monospace'}}>{project.projectCode}</p>
+                    </div>
+                    <span>&rarr;</span>
+                </button>
+            ))}
+        </div>
+      </div>
     </div>
   );
 };
