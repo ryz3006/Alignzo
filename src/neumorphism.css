@@ -34,11 +34,13 @@ html.dark body {
   color: var(--dark-text);
 }
 
+/* Helper Text Classes */
 .text-primary { color: var(--light-primary); }
 html.dark .text-primary { color: var(--dark-primary); }
 .text-strong { color: var(--light-text-strong); }
 html.dark .text-strong { color: var(--dark-text-strong); }
 
+/* Neumorphism Base Styles */
 .neumorph-outset {
   background: var(--light-bg);
   border-radius: 20px;
@@ -57,6 +59,7 @@ html.dark .neumorph-inset {
   box-shadow: inset 5px 5px 10px var(--dark-shadow-dark), inset -5px -5px 10px var(--dark-shadow-light);
 }
 
+/* Button Styles */
 .btn {
   border-radius: 12px;
   padding: 12px 24px;
@@ -76,59 +79,12 @@ html.dark .btn:active {
   box-shadow: inset 4px 4px 8px var(--dark-shadow-dark), inset -4px -4px 8px var(--dark-shadow-light) !important;
 }
 
+/* Input Field Styles */
 .input-field {
   width: 100%;
   padding: 12px 16px;
   border: none;
   background-color: transparent;
-  color: var(--light-text);
 }
-html.dark .input-field { color: var(--dark-text); }
 .input-field:focus { outline: none; }
-
-/* New Tab Button Styles */
-.tab-btn {
-  flex: 1;
-  position: relative;
-  height: 3.5em;
-  border: 3px ridge var(--light-primary);
-  outline: none;
-  background-color: transparent;
-  color: var(--light-text-strong);
-  transition: 1s;
-  border-radius: 0.3em;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-}
-html.dark .tab-btn {
-  border-color: var(--dark-primary);
-  color: var(--dark-text-strong);
-}
-.tab-btn::after, .tab-btn::before {
-  content: "";
-  position: absolute;
-  left: 3%;
-  width: 95%;
-  height: 40%;
-  background-color: var(--light-bg);
-  transition: 0.5s;
-  transform-origin: center;
-}
-html.dark .tab-btn::after, html.dark .tab-btn::before {
-    background-color: var(--dark-bg);
-}
-.tab-btn::after { top: -10px; }
-.tab-btn::before { top: 80%; }
-.tab-btn:hover::before, .tab-btn:hover::after,
-.tab-btn.active::before, .tab-btn.active::after {
-  transform: scale(0);
-}
-.tab-btn:hover, .tab-btn.active {
-  box-shadow: inset 0px 0px 25px var(--light-primary-dark);
-  color: var(--light-primary);
-}
-html.dark .tab-btn:hover, html.dark .tab-btn.active {
-  box-shadow: inset 0px 0px 25px var(--dark-primary-dark);
-  color: var(--dark-primary);
-}
+html.dark .input-field { color: var(--dark-text); }
