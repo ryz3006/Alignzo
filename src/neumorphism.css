@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
 :root {
   --font-family-main: 'Poppins', sans-serif;
   
@@ -77,7 +79,6 @@ html.dark .text-primary { color: var(--dark-primary); }
 html.dark .btn:active {
   box-shadow: inset 4px 4px 8px var(--dark-shadow-dark), inset -4px -4px 8px var(--dark-shadow-light) !important;
 }
-
 .btn-primary {
   color: white;
   background-color: var(--light-primary);
@@ -91,11 +92,12 @@ html.dark .btn-primary {
   padding: 12px 16px;
   border: none;
   background-color: transparent;
+  color: var(--light-text);
 }
-.input-field:focus { outline: none; }
 html.dark .input-field { color: var(--dark-text); }
+.input-field:focus { outline: none; }
 
-/* --- NEW STYLES FOR LOGIN TABS --- */
+/* Styles for login tabs */
 .tab-btn {
   flex: 1;
   position: relative;
@@ -115,46 +117,40 @@ html.dark .tab-btn {
   color: var(--dark-text-strong);
 }
 
-.tab-btn::after {
+.tab-btn.active, .tab-btn:hover {
+  box-shadow: inset 0px 0px 25px var(--light-primary-dark);
+  color: var(--light-primary);
+}
+html.dark .tab-btn.active, html.dark .tab-btn:hover {
+  box-shadow: inset 0px 0px 25px var(--dark-primary-dark);
+  color: var(--dark-primary);
+}
+
+.tab-btn::after, .tab-btn::before {
   content: "";
   position: absolute;
-  top: -10px;
   left: 3%;
   width: 95%;
   height: 40%;
-  background-color: var(--light-bg);
   transition: 0.5s;
   transform-origin: center;
+}
+.tab-btn::after {
+  top: -10px;
+  background-color: var(--light-bg);
 }
 html.dark .tab-btn::after {
   background-color: var(--dark-bg);
 }
-
 .tab-btn::before {
-  content: "";
-  transform-origin: center;
-  position: absolute;
   top: 80%;
-  left: 3%;
-  width: 95%;
-  height: 40%;
   background-color: var(--light-bg);
-  transition: 0.5s;
 }
 html.dark .tab-btn::before {
   background-color: var(--dark-bg);
 }
 
-.tab-btn:hover::before, .tab-btn:hover::after,
-.tab-btn.active::before, .tab-btn.active::after {
+.tab-btn.active::before, .tab-btn.active::after,
+.tab-btn:hover::before, .tab-btn:hover::after {
   transform: scale(0);
-}
-
-.tab-btn:hover, .tab-btn.active {
-  box-shadow: inset 0px 0px 25px var(--light-primary-dark);
-  color: var(--light-primary);
-}
-html.dark .tab-btn:hover, html.dark .tab-btn.active {
-  box-shadow: inset 0px 0px 25px var(--dark-primary-dark);
-  color: var(--dark-primary);
 }
