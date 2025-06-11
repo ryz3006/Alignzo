@@ -1,0 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+:root {
+  --font-family-main: 'Poppins', sans-serif;
+  
+  /* Light Mode Palette */
+  --light-bg: #E0E5EC;
+  --light-text: #5a6678;
+  --light-primary: #4A90E2; /* Soft Blue Accent */
+  --light-shadow-light: #ffffff;
+  --light-shadow-dark: #a3b1c6;
+
+  /* Dark Mode Palette */
+  --dark-bg: #2C2F34;
+  --dark-text: #a3b1c6;
+  --dark-primary: #58a6ff;
+  --dark-shadow-light: #363a40;
+  --dark-shadow-dark: #222528;
+}
+
+body {
+  font-family: var(--font-family-main);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Base styles for light mode */
+body {
+  background-color: var(--light-bg);
+  color: var(--light-text);
+}
+.neumorph {
+  background: var(--light-bg);
+  box-shadow: 6px 6px 12px var(--light-shadow-dark), -6px -6px 12px var(--light-shadow-light);
+}
+.neumorph-inset {
+  box-shadow: inset 4px 4px 8px var(--light-shadow-dark), inset -4px -4px 8px var(--light-shadow-light);
+}
+.neumorph-flat {
+    background: linear-gradient(145deg, #caced4, #f0f5fd);
+    box-shadow: 4px 4px 8px #bec3c9, -4px -4px 8px #ffffff;
+}
+.text-primary { color: var(--light-primary); }
+
+/* Dark mode overrides */
+html.dark body {
+  background-color: var(--dark-bg);
+  color: var(--dark-text);
+}
+html.dark .neumorph {
+  background: var(--dark-bg);
+  box-shadow: 6px 6px 12px var(--dark-shadow-dark), -6px -6px 12px var(--dark-shadow-light);
+}
+html.dark .neumorph-inset {
+  box-shadow: inset 4px 4px 8px var(--dark-shadow-dark), inset -4px -4px 8px var(--dark-shadow-light);
+}
+html.dark .neumorph-flat {
+    background: linear-gradient(145deg, #272a2f, #31343a);
+    box-shadow: 4px 4px 8px #24272b, -4px -4px 8px #34373d;
+}
+html.dark .text-primary { color: var(--dark-primary); }
+
+/* Component Specific Styles */
+.btn {
+  border-radius: 20px;
+  padding: 12px 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn:active {
+  box-shadow: inset 4px 4px 8px var(--light-shadow-dark), inset -4px -4px 8px var(--light-shadow-light);
+}
+html.dark .btn:active {
+  box-shadow: inset 4px 4px 8px var(--dark-shadow-dark), inset -4px -4px 8px var(--dark-shadow-light);
+}
+
+.input-field {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background-color: transparent;
+}
+.input-field:focus {
+  outline: none;
+}
+
+/* Custom scrollbar for a modern look */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--light-bg); }
+::-webkit-scrollbar-thumb { background: #a3b1c6; border-radius: 4px; }
+html.dark ::-webkit-scrollbar-track { background: var(--dark-bg); }
+html.dark ::-webkit-scrollbar-thumb { background: #5a6678; }
