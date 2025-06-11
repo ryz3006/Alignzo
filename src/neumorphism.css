@@ -85,83 +85,52 @@ html.dark .btn:active {
 .input-field:focus { outline: none; }
 html.dark .input-field { color: var(--dark-text); }
 
-/* New Modern Tab Styles */
-.modern-tab {
-  padding: 1em 2em;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 2.5px;
-  font-weight: 500;
+/* New Modern Animated Tab Styles */
+.modern-tab-btn {
+  flex: 1;
+  position: relative;
+  display: inline-block;
+  margin: 15px;
+  padding: 1em 1.5em;
+  text-align: center;
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-decoration: none;
   color: var(--light-primary);
-  background-color: var(--light-bg);
-  border: none;
-  border-radius: 45px;
-  box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease 0s;
+  background: transparent;
   cursor: pointer;
-  outline: none;
+  transition: ease-out 0.5s;
+  border: 2px solid var(--light-primary);
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 0 var(--light-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
-.modern-tab:hover {
+.modern-tab-btn:hover {
+  color: white;
+  box-shadow: inset 0 -100px 0 0 var(--light-primary);
+}
+.modern-tab-btn.active {
+  color: white;
   background-color: var(--light-primary);
-  box-shadow: 0px 15px 20px rgba(74, 144, 226, 0.4);
-  color: #fff;
-  transform: translateY(-7px);
+  box-shadow: 0px 8px 15px rgba(74, 144, 226, 0.2);
+  transform: translateY(-2px);
 }
-.modern-tab:active {
-  transform: translateY(-1px);
-}
-.modern-tab.active {
-  background-color: var(--light-primary);
-  box-shadow: 0px 15px 20px rgba(74, 144, 226, 0.4);
-  color: #fff;
-  transform: translateY(-7px);
-}
-html.dark .modern-tab {
-    color: var(--dark-primary);
-    background-color: var(--dark-bg);
-}
-html.dark .modern-tab:hover, html.dark .modern-tab.active {
-    background-color: var(--dark-primary);
-    color: var(--dark-bg);
-    box-shadow: 0px 15px 20px rgba(88, 166, 255, 0.2);
+.modern-tab-btn:active {
+  transform: scale(0.95);
 }
 
-/* --- New Animated Tab Styles --- */
-.animated-tabs-container {
-    position: relative;
-    display: flex;
-    padding: 5px;
-    border-radius: 40px;
+html.dark .modern-tab-btn {
+  color: var(--dark-primary);
+  border-color: var(--dark-primary);
 }
-.animated-tab {
-    position: relative;
-    z-index: 1;
-    padding: 1em 1.5em;
-    flex: 1;
-    text-align: center;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: color 0.4s ease-in-out;
-    white-space: nowrap;
+html.dark .modern-tab-btn:hover, html.dark .modern-tab-btn.active {
+  color: var(--dark-bg);
+  background-color: var(--dark-primary);
+  box-shadow: inset 0 -100px 0 0 var(--dark-primary);
 }
-.animated-tab.active {
-    color: white;
-}
-html.dark .animated-tab.active {
-    color: var(--dark-text-strong);
-}
-
-.tab-glider {
-    position: absolute;
-    top: 5px;
-    height: calc(100% - 10px);
-    border-radius: 40px;
-    background-color: var(--light-primary);
-    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
-    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-html.dark .tab-glider {
-    background-color: var(--dark-primary);
-    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.3);
+html.dark .modern-tab-btn.active {
+    box-shadow: 0px 8px 15px rgba(88, 166, 255, 0.2);
 }
