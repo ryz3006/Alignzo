@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-// The path is now '../firebase' to correctly point to the src directory
-import { auth, db } from '../firebase.js'; 
+import { auth, db } from '../firebase.js';
 import { doc, getDoc } from 'firebase/firestore';
 
 const AuthContext = createContext();
@@ -17,7 +16,6 @@ export const AuthProvider = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       if (user) {
-        // Check if the user is an admin
         const adminDocRef = doc(db, 'admins', user.uid);
         const adminDocSnap = await getDoc(adminDocRef);
         setIsAdmin(adminDocSnap.exists());
@@ -26,15 +24,10 @@ export const AuthProvider = ({ children }) => {
       }
       setLoading(false);
     });
-
     return unsubscribe;
   }, []);
 
-  const value = {
-    currentUser,
-    isAdmin,
-    loading
-  };
+  const value = { currentUser, isAdmin, loading };
 
   return (
     <AuthContext.Provider value={value}>
