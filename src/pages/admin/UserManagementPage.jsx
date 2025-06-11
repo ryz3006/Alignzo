@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { db } from '../../firebase';
-import { collection, query, where, getDocs, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { collection, query, where, getDocs, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, writeBatch, setDoc } from 'firebase/firestore';
 
 // --- Reusable MultiSelect Dropdown Component ---
 const MultiSelectDropdown = ({ options, selected, onSelectionChange, placeholder }) => {
@@ -23,20 +23,21 @@ const MultiSelectDropdown = ({ options, selected, onSelectionChange, placeholder
 
     return (
         <div style={{position: 'relative'}}>
-            <button type="button" onClick={() => setIsOpen(!isOpen)} className="w-full p-3 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-left flex justify-between items-center neumorph-inset">
+            <button type="button" onClick={() => setIsOpen(!isOpen)} className="input-field neumorph-inset" style={{width: '100%', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                 <span style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '1rem'}}>{selectedLabels || placeholder}</span>
                 <span>&#9662;</span>
             </button>
             {isOpen && (
                 <div className="neumorph-outset" style={{position: 'absolute', zIndex: 20, width: '100%', marginTop: '0.5rem', maxHeight: '240px', overflowY: 'auto', borderRadius: '12px'}}>
-                    <input 
-                        type="text"
-                        placeholder="Search..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="input-field"
-                        style={{padding: '0.75rem', borderBottom: '2px solid var(--light-bg)'}}
-                    />
+                    <div className="neumorph-inset" style={{padding: '0.25rem', borderRadius: '0', borderTopLeftRadius: '12px', borderTopRightRadius: '12px' }}>
+                        <input 
+                            type="text"
+                            placeholder="Search projects..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="input-field"
+                        />
+                    </div>
                     {filteredOptions.map(option => (
                         <div key={option.value} onClick={() => handleToggleOption(option.value)} style={{padding: '0.75rem 1rem', cursor: 'pointer', display: 'flex', alignItems: 'center'}}>
                            <input 
@@ -53,6 +54,7 @@ const MultiSelectDropdown = ({ options, selected, onSelectionChange, placeholder
         </div>
     );
 };
+
 
 const UserManagementPage = () => {
   const [users, setUsers] = useState([]);
@@ -115,7 +117,7 @@ const UserManagementPage = () => {
       try {
         await setDoc(doc(db, "users", currentUser.email), {
             email: currentUser.email,
-            contactNumber: currentUser.contactNumber,
+            contactNumber: currentUser.contactNumber || '',
             displayName: currentUser.email.split('@')[0],
             designation: currentUser.designation,
             reportingTo: currentUser.reportingTo,
@@ -123,9 +125,9 @@ const UserManagementPage = () => {
             isAdmin: false,
             createdAt: serverTimestamp()
         });
-        
-        const newUser = { id: currentUser.email, ...currentUser };
-        const managers = getAllManagers(newUser.id, [...users, newUser]);
+
+        const tempNewUser = { id: currentUser.email, ...currentUser };
+        const managers = getAllManagers(tempNewUser.id, [...users, tempNewUser]);
         
         const batch = writeBatch(db);
         managers.forEach(manager => {
@@ -220,10 +222,11 @@ const UserManagementPage = () => {
 
   const filteredUsers = users.filter(u => (u.displayName || u.email).toLowerCase().includes(searchTerm.toLowerCase()));
   const paginatedUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
 
   return (
     <>
-      <div className="neumorph-outset" style={{padding: '1.5rem'}}>
+      <div className="neumorph-outset" style={{padding: '1.5rem', borderRadius: '12px'}}>
         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem'}}>
            <div className="neumorph-inset" style={{padding: '0.25rem', borderRadius: '12px', flexGrow: 1}}>
              <input
@@ -235,7 +238,7 @@ const UserManagementPage = () => {
               style={{minWidth: '250px'}}
             />
            </div>
-          <button onClick={openAddUserModal} className="btn neumorph-outset" style={{color: 'var(--light-primary)', fontWeight: '600'}}>+ Add User</button>
+          <button onClick={openAddUserModal} className="btn neumorph-outset" style={{color: '#28a745', fontWeight: '600'}}>+ Add User</button>
         </div>
         <div style={{overflowX: 'auto'}}>
           <table style={{width: '100%', borderCollapse: 'separate', borderSpacing: '0 0.5rem'}}>
@@ -257,8 +260,8 @@ const UserManagementPage = () => {
                     {(user.mappedProjects || []).map(pId => projectMap[pId]).join(', ')}
                   </td>
                   <td style={{padding: '1rem', textAlign: 'right'}}>
-                    <button onClick={() => openEditModal(user)} style={{marginRight: '1rem', fontWeight: 600}} className="text-primary">Edit</button>
-                    <button onClick={() => handleDeleteUser(user.id, user.displayName || user.email)} style={{fontWeight: 600, color: '#e53e3e'}}>Delete</button>
+                    <button onClick={() => openEditModal(user)} style={{marginRight: '1rem', fontWeight: 600, border: 'none', background: 'transparent', cursor: 'pointer'}} className="text-primary">Edit</button>
+                    <button onClick={() => handleDeleteUser(user.id, user.displayName || user.email)} style={{fontWeight: 600, color: '#e53e3e', border: 'none', background: 'transparent', cursor: 'pointer'}}>Delete</button>
                   </td>
                 </tr>
               ))}
@@ -267,14 +270,15 @@ const UserManagementPage = () => {
         </div>
         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem'}}>
             <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1} className="btn neumorph-outset" style={{opacity: currentPage === 1 ? 0.5 : 1}}>Previous</button>
-            <span className="text-strong">Page {currentPage} of {Math.ceil(filteredUsers.length / itemsPerPage)}</span>
-            <button onClick={() => setCurrentPage(p => Math.min(p + 1, Math.ceil(filteredUsers.length / itemsPerPage)))} disabled={currentPage * itemsPerPage >= filteredUsers.length} className="btn neumorph-outset" style={{opacity: currentPage * itemsPerPage >= filteredUsers.length ? 0.5 : 1}}>Next</button>
+            <span className="text-strong">Page {currentPage} of {totalPages > 0 ? totalPages : 1}</span>
+            <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage >= totalPages} className="btn neumorph-outset" style={{opacity: currentPage >= totalPages ? 0.5 : 1}}>Next</button>
         </div>
       </div>
       
       {isModalOpen && currentUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
-          <div className="neumorph-outset" style={{padding: '2rem', width: '100%', maxWidth: '600px'}}>
+        <div style={{position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem'}}>
+          <div className="neumorph-outset" style={{padding: '2rem', width: '100%', maxWidth: '600px', position: 'relative'}}>
+            <button onClick={() => setIsModalOpen(false)} className="btn neumorph-outset" style={{position: 'absolute', top: '1rem', right: '1rem', borderRadius: '50%', padding: '0.5rem', width: '40px', height: '40px'}}>&times;</button>
             <h2 style={{fontSize: '1.5rem', fontWeight: '700', marginBottom: '2rem'}} className="text-strong">{isEditing ? 'Edit User' : 'Add New User'}</h2>
             <form onSubmit={handleFormSubmit} style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
                 <div className="neumorph-inset"><input type="email" name="email" value={currentUser.email} onChange={handleUserInputChange} placeholder="Email" required className="input-field" disabled={isEditing}/></div>
@@ -303,7 +307,7 @@ const UserManagementPage = () => {
                 </div>
               <div style={{display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem'}}>
                 <button type="button" onClick={() => setIsModalOpen(false)} className="btn neumorph-outset">Cancel</button>
-                <button type="submit" className="btn neumorph-outset btn-primary">{isEditing ? 'Save Changes' : 'Add User'}</button>
+                <button type="submit" className="btn neumorph-outset" style={{color: 'white', backgroundColor: 'var(--light-primary)'}}>{isEditing ? 'Save Changes' : 'Add User'}</button>
               </div>
             </form>
           </div>
