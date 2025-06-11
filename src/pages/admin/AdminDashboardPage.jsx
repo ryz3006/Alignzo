@@ -47,6 +47,9 @@ const UserNode = ({ user, allUsers, level }) => {
                     height: 100%;
                     border-left: 2px solid var(--light-primary);
                 }
+                html.dark .node-connector::before {
+                    border-left-color: var(--dark-primary);
+                }
                 .node-connector-entry::after {
                     content: '';
                     position: absolute;
@@ -55,6 +58,9 @@ const UserNode = ({ user, allUsers, level }) => {
                     width: 18px;
                     height: 2px;
                     background-color: var(--light-primary);
+                }
+                html.dark .node-connector-entry::after {
+                    background-color: var(--dark-primary);
                 }
              `}</style>
             <div className="node-connector-entry" style={{ display: 'flex', alignItems: 'center', margin: '0.5rem 0' }}>
