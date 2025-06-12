@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithPopup, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth, googleProvider, db } from '../firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import LogoOnly from '../assets/images/Logo_only.png';
 
@@ -23,8 +23,7 @@ const CombinedLoginPage = () => {
   const navigate = useNavigate();
 
   const handleGoogleLogin = async () => {
-    setError(''); 
-    setIsAppLoading(true);
+    setError(''); setIsAppLoading(true);
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
@@ -43,18 +42,13 @@ const CombinedLoginPage = () => {
             navigate('/no-projects');
         }
       }
-    } catch (err) { 
-        setError("An error occurred during sign-in."); 
-        console.error(err); 
-    } finally { 
-        setIsAppLoading(false); 
-    }
+    } catch (err) { setError("An error occurred during sign-in."); console.error(err); } 
+    finally { setIsAppLoading(false); }
   };
 
   const handleAdminLogin = async (e) => {
     e.preventDefault();
-    setError(''); 
-    setIsAppLoading(true);
+    setError(''); setIsAppLoading(true);
     const authEmail = username.includes('@') ? username : `${username}@oneteam.local`;
     try {
       const result = await signInWithEmailAndPassword(auth, authEmail, password);
@@ -65,12 +59,8 @@ const CombinedLoginPage = () => {
           await signOut(auth);
           setError("You do not have administrator privileges.");
       }
-    } catch (err) { 
-        setError('Invalid admin credentials.'); 
-        console.error(err); 
-    } finally { 
-        setIsAppLoading(false); 
-    }
+    } catch (err) { setError('Invalid admin credentials.'); console.error(err); }
+    finally { setIsAppLoading(false); }
   };
 
   return (
