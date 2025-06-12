@@ -10,7 +10,8 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true); // Renamed for clarity
+  const [isAppLoading, setIsAppLoading] = useState(false); // New global loader state
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -22,16 +23,16 @@ export const AuthProvider = ({ children }) => {
       } else {
         setIsAdmin(false);
       }
-      setLoading(false);
+      setAuthLoading(false);
     });
     return unsubscribe;
   }, []);
 
-  const value = { currentUser, isAdmin, loading };
+  const value = { currentUser, isAdmin, authLoading, isAppLoading, setIsAppLoading };
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {!authLoading && children}
     </AuthContext.Provider>
   );
 };
