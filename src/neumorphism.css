@@ -140,3 +140,23 @@ html.dark .login-tab-btn:hover, html.dark .login-tab-btn.active {
   box-shadow: inset 0px 0px 25px var(--dark-primary-dark);
   color: var(--dark-primary);
 }
+
+
+/* --- NEW: Input Autofill Styles --- */
+.input-field:-webkit-autofill,
+.input-field:-webkit-autofill:hover, 
+.input-field:-webkit-autofill:focus, 
+.input-field:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px var(--light-bg) inset !important;
+    box-shadow: 0 0 0 30px var(--light-bg) inset !important;
+    -webkit-text-fill-color: var(--light-text-strong) !important;
+}
+
+html.dark .input-field:-webkit-autofill,
+html.dark .input-field:-webkit-autofill:hover, 
+html.dark .input-field:-webkit-autofill:focus, 
+html.dark .input-field:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px var(--dark-bg) inset !important;
+    box-shadow: 0 0 0 30px var(--dark-bg) inset !important;
+    -webkit-text-fill-color: var(--dark-text-strong) !important;
+}
