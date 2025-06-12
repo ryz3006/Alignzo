@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithPopup, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth, googleProvider, db } from '../firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import LogoOnly from '../assets/images/Logo_only.png';
 
@@ -74,7 +74,7 @@ const CombinedLoginPage = () => {
             <p style={{marginTop: '0.5rem', fontWeight: 500}}>Smarter Alignment. Smarter Operations.</p>
         </div>
         
-        <div style={{display: 'flex', marginBottom: '1.5rem', gap: '1rem'}}>
+        <div style={{display: 'flex', marginBottom: '2rem', gap: '1rem'}}>
             <TabButton active={activeTab === 'user'} onClick={() => setActiveTab('user')}>User</TabButton>
             <TabButton active={activeTab === 'admin'} onClick={() => setActiveTab('admin')}>Admin</TabButton>
         </div>
