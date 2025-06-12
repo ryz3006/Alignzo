@@ -10,8 +10,8 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [authLoading, setAuthLoading] = useState(true); // Renamed for clarity
-  const [isAppLoading, setIsAppLoading] = useState(false); // New global loader state
+  const [authLoading, setAuthLoading] = useState(true);
+  const [isAppLoading, setIsAppLoading] = useState(false); // Global loading state
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
