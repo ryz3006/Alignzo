@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { db } from '../../firebase';
 import { collection, query, where, getDocs, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, writeBatch, setDoc } from 'firebase/firestore';
+import { useAuth } from '../../contexts/AuthContext';
 
 // --- Reusable MultiSelect Dropdown Component ---
 const MultiSelectDropdown = ({ options, selected, onSelectionChange, placeholder }) => {
@@ -58,6 +59,7 @@ const MultiSelectDropdown = ({ options, selected, onSelectionChange, placeholder
 
 
 const UserManagementPage = () => {
+  const { isAppLoading, setIsAppLoading } = useAuth();
   const [users, setUsers] = useState([]);
   const [projects, setProjects] = useState([]);
   const [designations, setDesignations] = useState([]);
@@ -76,17 +78,18 @@ const UserManagementPage = () => {
   const defaultNewUser = { email: '', displayName: '', contactNumber: '', designation: designations.length > 0 ? designations[0] : '', reportingTo: '', mappedProjects: [] };
 
   useEffect(() => {
+      setIsAppLoading(true);
     const unsubUsers = onSnapshot(collection(db, "users"), snap => {
         const usersData = snap.docs.map(d => ({id: d.id, ...d.data()}));
         const getSortOrder = (designation) => designations.indexOf(designation);
         usersData.sort((a, b) => getSortOrder(a.designation) - getSortOrder(b.designation));
         setUsers(usersData);
-        setLoading(false);
+        setIsAppLoading(false);
     });
     const unsubProjects = onSnapshot(collection(db, "projects"), snap => setProjects(snap.docs.map(d => ({id: d.id, ...d.data()}))));
     const unsubDesignations = onSnapshot(doc(db, 'settings', 'designations'), d => setDesignations(d.exists() ? d.data().list : []));
-    return () => { unsubUsers(); unsubProjects(); unsubDesignations(); };
-  }, [designations]);
+    return () => { unsubUsers(); unsubProjects(); unsubDesignations(); unsub(); };
+  }, [designations], [setIsAppLoading]);
   
   const getAllSubordinates = (userId, allUsers) => {
     let subordinates = [];
@@ -122,7 +125,7 @@ const UserManagementPage = () => {
 
   const handleAddUser = async () => {
       if (!currentUser.email || !currentUser.displayName) return alert("Email and Full Name are required.");
-      
+      setIsAppLoading(true);
       const nameQuery = query(collection(db, "users"), where("displayName", "==", currentUser.displayName));
       const nameSnap = await getDocs(nameQuery);
       if(!nameSnap.empty) return alert("A user with this display name already exists.");
@@ -153,11 +156,12 @@ const UserManagementPage = () => {
         alert(`User record for ${currentUser.email} created.`);
         setIsModalOpen(false);
       } catch (error) { console.error(error); alert("Failed to add user."); }
+      finally { setIsAppLoading(false); }
   };
 
   const handleEditUser = async () => {
     if (!currentUser) return;
-    
+    setIsAppLoading(true);
     const originalUser = users.find(u => u.id === currentUser.id);
     if (!originalUser) return alert("Could not find original user data.");
 
@@ -200,6 +204,7 @@ const UserManagementPage = () => {
         await batch.commit();
         setIsModalOpen(false);
     } catch(error) { console.error(error); alert("Failed to update user."); }
+      finally { setIsAppLoading(false); }
   };
 
   const handleDeleteUser = async (userEmail, userDisplayName) => {
@@ -218,10 +223,12 @@ const UserManagementPage = () => {
     }
 
     if(window.confirm(`Are you sure you want to delete ${userDisplayName}?`)) {
+        setIsAppLoading(true);
         try {
             await deleteDoc(doc(db, "users", userEmail));
             alert("User record deleted.");
         } catch(error) { console.error(error); alert("Failed to delete user."); }
+        finally { setIsAppLoading(false); }
     }
   }
   
