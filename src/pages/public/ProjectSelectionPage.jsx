@@ -23,15 +23,16 @@ const ProjectSelectionPage = () => {
       setError('');
       setIsAppLoading(true);
       try {
-        const usersRef = collection(db, "users");
-        const q = query(usersRef, where("email", "==", user.email));
-        const userQuerySnapshot = await getDocs(q);
+        // Use a direct 'get' operation with the user's email as the document ID
+        const userDocRef = doc(db, "users", user.email);
+        const userDocSnap = await getDoc(userDocRef);
 
-        if (!userQuerySnapshot.empty) {
-          const userData = userQuerySnapshot.docs[0].data();
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data();
           const projectIds = userData.mappedProjects || [];
 
           if (projectIds.length > 0) {
+            // Fetch each project document individually using getDoc
             const projectPromises = projectIds.map(id => getDoc(doc(db, "projects", id)));
             const projectSnapshots = await Promise.all(projectPromises);
             
