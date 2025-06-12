@@ -4,6 +4,7 @@ import { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, serverTimest
 import { useAuth } from '../../contexts/AuthContext';
 import { useProject } from '../../contexts/ProjectContext';
 
+// --- Reusable MultiSelect Dropdown Component ---
 const MultiSelectDropdown = ({ options, selected, onSelectionChange, placeholder }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -88,9 +89,10 @@ const DocumentRepositoryPage = () => {
             setIsAppLoading(false);
         });
         
-        // This was the source of the error. The subcollection for settings is 'projectSettings', not 'settings'
-        const settingsRef = doc(db, 'projects', selectedProject.id);
-        const unsubModules = onSnapshot(settingsRef, docSnap => {
+        // Corrected logic: The settings for modules are on the project document itself.
+        const projectDocRef = doc(db, 'projects', selectedProject.id);
+        const unsubModules = onSnapshot(projectDocRef, docSnap => {
+            // This now safely handles a missing 'modules' field by defaulting to an empty array.
             setModules(docSnap.exists() ? (docSnap.data().modules || []) : []);
         });
 
@@ -146,73 +148,79 @@ const DocumentRepositoryPage = () => {
     const paginatedDocuments = useMemo(() => filteredDocuments.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage), [filteredDocuments, currentPage]);
     const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
 
+    if (!selectedProject) {
+        return <div className="text-strong text-center p-8 neumorph-outset rounded-lg">Please select a project from your dashboard to view documents.</div>
+    }
+
     return (
-        <div className="neumorph-outset" style={{padding: '1.5rem', borderRadius: '12px'}}>
-            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem'}}>
-               <div className="neumorph-inset" style={{padding: '0.25rem', borderRadius: '12px', flexGrow: 1}}>
-                 <input
-                  type="text"
-                  placeholder="Search by name or description..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="input-field"
-                  style={{minWidth: '250px'}}
-                />
-               </div>
-               <div className="neumorph-inset" style={{padding: '0.25rem', borderRadius: '12px'}}>
-                 <select onChange={(e) => setModuleFilter(e.target.value)} value={moduleFilter} className="input-field">
-                    <option value="">Filter by Module...</option>
-                    {modules.map(m => <option key={m} value={m}>{m}</option>)}
-                 </select>
-               </div>
-              <button onClick={openCreateModal} className="btn neumorph-outset" style={{color: '#28a745', fontWeight: '600'}}>+ Add Document</button>
-            </div>
-            
-            <div style={{overflowX: 'auto'}}>
-                <table style={{width: '100%', borderCollapse: 'separate', borderSpacing: '0 0.5rem'}}>
-                    <thead>
-                        <tr>
-                            <th style={{padding: '0.75rem', textAlign: 'left'}} className="text-strong">Document Name</th>
-                            <th style={{padding: '0.75rem', textAlign: 'left'}} className="text-strong">Link</th>
-                            <th style={{padding: '0.75rem', textAlign: 'left'}} className="text-strong">Modules</th>
-                            <th style={{padding: '0.75rem', textAlign: 'right'}} className="text-strong">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {paginatedDocuments.map(doc => (
-                            <tr key={doc.id} className="neumorph-outset" style={{borderRadius: '12px'}}>
-                                <td style={{padding: '1rem'}} className="text-strong">{doc.name}</td>
-                                <td style={{padding: '1rem'}}><a href={doc.link} target="_blank" rel="noopener noreferrer" className="text-primary" style={{textDecoration: 'underline'}}>Open Link</a></td>
-                                <td style={{padding: '1rem'}}>{(doc.modules || []).join(', ')}</td>
-                                <td style={{padding: '1rem', textAlign: 'right'}}>
-                                    <button onClick={() => openEditModal(doc)} style={{marginRight: '1rem', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '1.25rem'}} className="text-primary">&#9998;</button>
-                                    <button onClick={() => handleDelete(doc.id)} style={{color: '#e53e3e', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '1.25rem'}}>&#128465;</button>
-                                </td>
+        <>
+            <div className="neumorph-outset" style={{padding: '1.5rem', borderRadius: '12px'}}>
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem'}}>
+                   <div className="neumorph-inset" style={{padding: '0.25rem', borderRadius: '12px', flexGrow: 1}}>
+                     <input
+                      type="text"
+                      placeholder="Search by name or description..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="input-field"
+                      style={{minWidth: '250px'}}
+                    />
+                   </div>
+                   <div className="neumorph-inset" style={{padding: '0.25rem', borderRadius: '12px'}}>
+                     <select onChange={(e) => setModuleFilter(e.target.value)} value={moduleFilter} className="input-field">
+                        <option value="">Filter by Module...</option>
+                        {modules.map(m => <option key={m} value={m}>{m}</option>)}
+                     </select>
+                   </div>
+                  <button onClick={openCreateModal} className="btn neumorph-outset" style={{color: '#28a745', fontWeight: '600'}}>+ Add Document</button>
+                </div>
+                
+                <div style={{overflowX: 'auto'}}>
+                    <table style={{width: '100%', borderCollapse: 'separate', borderSpacing: '0 0.5rem'}}>
+                        <thead>
+                            <tr>
+                                <th style={{padding: '0.75rem', textAlign: 'left'}} className="text-strong">Document Name</th>
+                                <th style={{padding: '0.75rem', textAlign: 'left'}} className="text-strong">Link</th>
+                                <th style={{padding: '0.75rem', textAlign: 'left'}} className="text-strong">Modules</th>
+                                <th style={{padding: '0.75rem', textAlign: 'right'}} className="text-strong">Actions</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem'}}>
-                <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1} className="btn neumorph-outset" style={{opacity: currentPage === 1 ? 0.5 : 1}}>Previous</button>
-                <span className="text-strong">Page {currentPage} of {totalPages > 0 ? totalPages : 1}</span>
-                <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage >= totalPages} className="btn neumorph-outset" style={{opacity: currentPage >= totalPages ? 0.5 : 1}}>Next</button>
+                        </thead>
+                        <tbody>
+                            {paginatedDocuments.map(docData => (
+                                <tr key={docData.id} className="neumorph-outset" style={{borderRadius: '12px'}}>
+                                    <td style={{padding: '1rem'}} className="text-strong">{docData.name}</td>
+                                    <td style={{padding: '1rem'}}><a href={docData.link} target="_blank" rel="noopener noreferrer" className="text-primary" style={{textDecoration: 'underline'}}>Open Link</a></td>
+                                    <td style={{padding: '1rem'}}>{(docData.modules || []).join(', ')}</td>
+                                    <td style={{padding: '1rem', textAlign: 'right'}}>
+                                        <button onClick={() => openEditModal(docData)} style={{marginRight: '1rem', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '1.2rem'}}>&#9998;</button>
+                                        <button onClick={() => handleDelete(docData.id)} style={{color: '#e53e3e', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '1.2rem'}}>&#128465;</button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem'}}>
+                    <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1} className="btn neumorph-outset" style={{opacity: currentPage === 1 ? 0.5 : 1}}>Previous</button>
+                    <span className="text-strong">Page {currentPage} of {totalPages > 0 ? totalPages : 1}</span>
+                    <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage >= totalPages} className="btn neumorph-outset" style={{opacity: currentPage >= totalPages ? 0.5 : 1}}>Next</button>
+                </div>
             </div>
 
-            {isModalOpen && (
+            {isModalOpen && currentDoc && (
                 <div style={{position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem'}}>
                     <div className="neumorph-outset" style={{padding: '2rem', width: '100%', maxWidth: '600px', position: 'relative', maxHeight: '90vh', overflowY: 'auto'}}>
                         <button onClick={() => setIsModalOpen(false)} className="btn neumorph-outset" style={{position: 'absolute', top: '1rem', right: '1rem', borderRadius: '50%', padding: '0.5rem', width: '40px', height: '40px'}}>&times;</button>
                         <h2 style={{fontSize: '1.5rem', fontWeight: '700', marginBottom: '2rem'}} className="text-strong">{isEditing ? 'Edit Document' : 'Add New Document'}</h2>
                         <form onSubmit={handleFormSubmit} style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
-                            <div className="neumorph-inset"><input type="text" name="name" value={currentDoc.name} onChange={handleInputChange} placeholder="Document Name" required className="input-field" /></div>
+                            <div className="neumorph-inset"><input type="text" name="name" value={currentDoc.name || ''} onChange={handleInputChange} placeholder="Document Name" required className="input-field"/></div>
                             <div className="neumorph-inset"><textarea name="description" value={currentDoc.description || ''} onChange={handleInputChange} placeholder="Description" className="input-field" style={{height: '80px'}}></textarea></div>
-                            <div className="neumorph-inset"><input type="url" name="link" value={currentDoc.link} onChange={handleInputChange} placeholder="Document Link (URL)" required className="input-field" /></div>
+                            <div className="neumorph-inset"><input type="url" name="link" value={currentDoc.link || ''} onChange={handleInputChange} placeholder="https://example.com/document" required className="input-field"/></div>
                             <div>
                                 <label className="text-strong" style={{marginBottom: '0.5rem', display: 'block'}}>Modules</label>
                                 <MultiSelectDropdown 
                                     options={modules}
-                                    selected={currentDoc.modules}
+                                    selected={currentDoc.modules || []}
                                     onSelectionChange={handleModuleSelection}
                                     placeholder="Select modules..."
                                 />
