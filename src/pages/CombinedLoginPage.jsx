@@ -18,7 +18,7 @@ const CombinedLoginPage = () => {
   const [activeTab, setActiveTab] = useState('user');
   const [error, setError] = useState('');
   const { isAppLoading, setIsAppLoading } = useAuth();
-  const [username, setUsername] = useState('admin');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
