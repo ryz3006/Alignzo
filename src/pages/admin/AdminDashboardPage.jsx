@@ -1,325 +1,103 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { db } from '../../firebase';
-import { collection, doc, onSnapshot } from 'firebase/firestore';
-import { useAuth } from '../../contexts/AuthContext';
+import { signInWithPopup, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { auth, googleProvider, db } from '../firebase';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { useAuth } from '../contexts/AuthContext';
+import LogoOnly from '../assets/images/Logo_only.png';
 
-// Helper function to dynamically load scripts if they aren't already loaded
-const loadScript = (src) => {
-    return new Promise((resolve, reject) => {
-        if (document.querySelector(`script[src="${src}"]`)) {
-            return resolve();
-        }
-        const script = document.createElement('script');
-        script.src = src;
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error(`Script load error for ${src}`));
-        document.body.appendChild(script);
-    });
-};
+const GoogleIcon = () => ( <svg style={{width: '24px', height: '24px', marginRight: '12px'}} viewBox="0 0 48 48"> <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path> <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path> <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path> <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571l6.19,5.238C42.021,35.596,44,30.138,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path> </svg> );
 
-// --- Reusable Styled Components for this page ---
-
-const StatTile = ({ title, value, icon, onClick }) => (
-    <div onClick={onClick} className="neumorph-outset" style={{padding: '1.5rem', cursor: 'pointer', transition: 'transform 0.2s ease-in-out'}}>
-      <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
-        <div className="neumorph-outset" style={{width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.75rem', flexShrink: 0}}>
-          <span className="text-primary">{icon}</span>
-        </div>
-        <div>
-          <p style={{margin: 0, fontSize: '0.9rem', fontWeight: 500}} className="text-strong">{title}</p>
-          <p style={{margin: '0', fontSize: '2.25rem', fontWeight: '700'}} className="text-strong">{value}</p>
-        </div>
-      </div>
-    </div>
-);
-
-const UserNode = ({ user, allUsers, level }) => {
-    const [isExpanded, setIsExpanded] = useState(true);
-    const subordinates = allUsers.filter(u => u.reportingTo === user.id);
-    return (
-        <div style={{ position: 'relative', paddingLeft: '30px' }}>
-             <style>{`
-                .node-connector::before {
-                    content: '';
-                    position: absolute;
-                    left: 12px;
-                    top: -14px;
-                    height: 100%;
-                    border-left: 2px solid var(--light-primary);
-                }
-                html.dark .node-connector::before {
-                    border-left-color: var(--dark-primary);
-                }
-                .node-connector-entry::after {
-                    content: '';
-                    position: absolute;
-                    left: 12px;
-                    top: 22px;
-                    width: 18px;
-                    height: 2px;
-                    background-color: var(--light-primary);
-                }
-                html.dark .node-connector-entry::after {
-                    background-color: var(--dark-primary);
-                }
-             `}</style>
-            <div className="node-connector-entry" style={{ display: 'flex', alignItems: 'center', margin: '0.5rem 0' }}>
-                <button 
-                    onClick={() => setIsExpanded(!isExpanded)} 
-                    className="btn neumorph-outset" 
-                    style={{ borderRadius: '50%', padding: '0.5rem', marginRight: '10px', visibility: subordinates.length > 0 ? 'visible' : 'hidden' }}
-                >
-                    <svg style={{width: '1rem', height: '1rem', transition: 'transform 0.3s', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)'}} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
-                </button>
-                <div className="neumorph-inset" style={{padding: '0.75rem 1rem', borderRadius: '8px', flexGrow: 1}}>
-                    <span style={{fontWeight: '600'}} className="text-strong">{user.displayName || user.email}</span>
-                    <span style={{marginLeft: '0.5rem', fontSize: '0.8rem'}}>({user.designation || 'N/A'})</span>
-                </div>
-            </div>
-            {isExpanded && subordinates.length > 0 && (
-                <div className="node-connector">
-                    {subordinates.map(sub => <UserNode key={sub.id} user={sub} allUsers={allUsers} />)}
-                </div>
-            )}
-        </div>
-    );
-};
-
-const DashboardTabButton = ({ active, onClick, children, icon }) => (
+const TabButton = ({ active, onClick, children }) => (
     <button type="button" onClick={onClick} className={`login-tab-btn ${active ? 'active' : ''}`}>
-        <span style={{width: '24px', height: '24px'}}>{icon}</span>
-        <span className="hidden md:inline">{children}</span>
-    </button>
-);
-
-const DownloadButton = ({ onClick, children }) => (
-    <button onClick={onClick} className="btn neumorph-outset" style={{fontSize: '0.8rem', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
         {children}
     </button>
 );
 
-// --- Main Dashboard Page Component ---
-const AdminDashboardPage = () => {
-    const [activeTab, setActiveTab] = useState('overview');
-    const [users, setUsers] = useState([]);
-    const [projects, setProjects] = useState([]);
-    const [designations, setDesignations] = useState([]);
-    const [selectedProjectId, setSelectedProjectId] = useState('');
-    const { setIsAppLoading } = useAuth();
-    const navigate = useNavigate();
+const CombinedLoginPage = () => {
+  const [activeTab, setActiveTab] = useState('user');
+  const [error, setError] = useState('');
+  const { isAppLoading, setIsAppLoading } = useAuth();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
-    useEffect(() => {
-
-        Promise.all([
-            loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"),
-            loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"),
-            loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js")
-        ]).catch(error => console.error("Could not load download scripts:", error));
-        
-        setIsAppLoading(true);
-        const unsubUsers = onSnapshot(collection(db, "users"), snap => {
-            setUsers(snap.docs.map(d => ({id: d.id, ...d.data()})));
-            setIsAppLoading(false);
-        });
-        const unsubProjects = onSnapshot(collection(db, "projects"), snap => setProjects(snap.docs.map(d => ({id: d.id, ...d.data()}))));
-        const unsubDesignations = onSnapshot(doc(db, 'settings', 'designations'), d => setDesignations(d.exists() ? d.data().list : []));
-        
-        return () => { unsubUsers(); unsubProjects(); unsubDesignations(); };
-    }, [setIsAppLoading]);
-    
-    
-    const userMap = useMemo(() => users.reduce((acc, u) => ({...acc, [u.id]: u}), {}), [users]);
-    const hierarchyData = useMemo(() => {
-        const data = [];
-        const buildHierarchy = (user, level) => {
-            data.push({
-                Level: `L${level}`,
-                User: user.displayName || user.email,
-                Designation: user.designation || 'N/A',
-                'Reporting To': userMap[user.reportingTo]?.displayName || 'N/A'
-            });
-            const subordinates = users.filter(u => u.reportingTo === user.id);
-            subordinates.forEach(sub => buildHierarchy(sub, level + 1));
-        };
-        users.filter(u => !u.reportingTo).forEach(topLevelUser => buildHierarchy(topLevelUser, 1));
-        return data;
-    }, [users, userMap]);
-    
-    const selectedProject = useMemo(() => projects.find(p => p.id === selectedProjectId), [projects, selectedProjectId]);
-
-    const escalationMatrix = useMemo(() => {
-        if (!selectedProject) return [];
-        const projectUsers = users.filter(u => (u.mappedProjects || []).includes(selectedProjectId));
-        const userMapForProject = projectUsers.reduce((acc, u) => ({...acc, [u.id]: u}), {});
-
-        // NEW LOGIC: Calculate management level (bottom-up)
-        const getManagementLevel = (userId, memo = {}) => {
-            if (memo[userId] !== undefined) return memo[userId];
-            const subordinates = projectUsers.filter(u => u.reportingTo === userId);
-            if (subordinates.length === 0) {
-                memo[userId] = 0;
-                return 0;
-            }
-            const maxSubordinateLevel = Math.max(...subordinates.map(s => getManagementLevel(s.id, memo)));
-            const level = 1 + maxSubordinateLevel;
-            memo[userId] = level;
-            return level;
-        };
-        
-        projectUsers.forEach(user => { user.managementLevel = getManagementLevel(user.id); });
-        
-        const getDesignationRank = (designation) => {
-            const index = designations.indexOf(designation);
-            return index === -1 ? Infinity : index;
-        };
-
-        const sortedUsers = projectUsers.sort((a, b) => {
-            if (a.managementLevel < b.managementLevel) return -1;
-            if (a.managementLevel > b.managementLevel) return 1;
-            return getDesignationRank(a.designation) - getDesignationRank(b.designation);
-        });
-
-        const matrix = [];
-        if (selectedProject.commonContactEmail || selectedProject.commonContactNumber) {
-            matrix.push({
-                Level: 'L1',
-                User: 'Common Contact',
-                Designation: 'L1 Support',
-                Email: selectedProject.commonContactEmail || 'N/A',
-                'Contact Number': selectedProject.commonContactNumber || 'N/A'
-            });
+  const handleGoogleLogin = async () => {
+    setError(''); setIsAppLoading(true);
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      
+      const userDocRef = doc(db, 'users', user.email);
+      const userDocSnap = await getDoc(userDocRef);
+      
+      if (!userDocSnap.exists()) {
+        await signOut(auth);
+        setError("Access denied. Please contact your administrator.");
+      } else {
+        const userData = userDocSnap.data();
+        if (userData.mappedProjects && userData.mappedProjects.length > 0) {
+            navigate('/project-selection');
+        } else {
+            navigate('/no-projects');
         }
-        if (sortedUsers.length > 0) {
-            let levelCounter = matrix.length + 1;
-            let lastLevel = sortedUsers[0]?.managementLevel;
-            sortedUsers.forEach((user, index) => {
-                if (index > 0 && user.managementLevel !== lastLevel) {
-                    levelCounter++;
-                }
-                matrix.push({
-                    Level: `L${levelCounter}`,
-                    User: user.displayName || user.email,
-                    Designation: user.designation,
-                    Email: user.email,
-                    'Contact Number': user.contactNumber || 'N/A'
-                });
-                lastLevel = user.managementLevel;
-            });
-        }
-        return matrix;
-    }, [selectedProjectId, users, designations, selectedProject]);
+      }
+    } catch (err) { setError("An error occurred during sign-in."); console.error(err); } 
+    finally { setIsAppLoading(false); }
+  };
 
-    const downloadAsExcel = (data, filename, title) => {
-        if (typeof window.XLSX === 'undefined') return alert("Excel library not loaded yet. Please try again.");
-        if (data.length === 0) return alert("No data available to download.");
-        const timestamp = `Downloaded from Alignzo dashboard at ${new Date().toLocaleString()}`;
-        const finalData = [[title], [timestamp], []].concat([Object.keys(data[0])]).concat(data.map(row => Object.values(row)));
-        const worksheet = window.XLSX.utils.aoa_to_sheet(finalData);
-        const workbook = window.XLSX.utils.book_new();
-        window.XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-        window.XLSX.writeFile(workbook, `${filename}.xlsx`);
-    };
+  const handleAdminLogin = async (e) => {
+    e.preventDefault();
+    setError(''); setIsAppLoading(true);
+    const authEmail = username.includes('@') ? username : `${username}@oneteam.local`;
+    try {
+      const result = await signInWithEmailAndPassword(auth, authEmail, password);
+      const adminDoc = await getDoc(doc(db, 'admins', result.user.uid));
+      if (adminDoc.exists()) {
+          navigate('/admin/dashboard');
+      } else {
+          await signOut(auth);
+          setError("You do not have administrator privileges.");
+      }
+    } catch (err) { setError('Invalid admin credentials.'); console.error(err); }
+    finally { setIsAppLoading(false); }
+  };
 
-    const downloadAsPdf = (data, title, filename) => {
-        if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') return alert("PDF library not loaded yet. Please try again in a moment.");
-        if (data.length === 0) return alert("No data available to download.");
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-
-        if (typeof doc.autoTable !== 'function') return alert("Could not generate PDF table. The AutoTable plugin is missing.");
-        
-        doc.text(title, 14, 16);
-        doc.autoTable({
-            startY: 22,
-            head: [Object.keys(data[0])],
-            body: data.map(Object.values),
-        });
-        doc.setFontSize(8);
-        doc.text(`Downloaded from Alignzo dashboard at ${new Date().toLocaleString()}`, 14, doc.internal.pageSize.height - 10);
-        doc.save(`${filename}.pdf`);
-    };
-
-    const renderContent = () => {
-        switch (activeTab) {
-            case 'hierarchy':
-                return (
-                    <div className="neumorph-outset" style={{padding: '1.5rem'}}>
-                        <div style={{display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginBottom: '1rem'}}>
-                            <DownloadButton onClick={() => downloadAsExcel(hierarchyData, 'user-hierarchy', 'User Hierarchy')}>&#128196; Excel</DownloadButton>
-                            <DownloadButton onClick={() => downloadAsPdf(hierarchyData, 'User Hierarchy', 'user-hierarchy')}>&#128196; PDF</DownloadButton>
-                        </div>
-                        {users.filter(u => !u.reportingTo).map(user => <UserNode key={user.id} user={user} allUsers={users} />)}
-                    </div>
-                );
-            case 'escalation':
-                return (
-                    <div className="neumorph-outset" style={{padding: '1.5rem'}}>
-                        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem'}}>
-                            <div className="neumorph-inset" style={{padding: '0.25rem', borderRadius: '12px', flexGrow: 1}}>
-                                <select id="project-select" value={selectedProjectId} onChange={e => setSelectedProjectId(e.target.value)} className="input-field" style={{paddingRight: '2rem', minWidth: '250px'}}>
-                                    <option value="">-- Select a Project --</option>
-                                    {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                </select>
-                            </div>
-                            {selectedProjectId && (
-                                <div style={{display: 'flex', gap: '1rem'}}>
-                                    <DownloadButton onClick={() => downloadAsExcel(escalationMatrix, 'escalation-matrix', `Escalation Matrix: ${selectedProject.name}`)}>&#128196; Excel</DownloadButton>
-                                    <DownloadButton onClick={() => downloadAsPdf(escalationMatrix, `Escalation Matrix: ${selectedProject.name}`, 'escalation-matrix')}>&#128196; PDF</DownloadButton>
-                                </div>
-                            )}
-                        </div>
-                        {selectedProjectId && (
-                            <div style={{overflowX: 'auto'}}>
-                                <table style={{width: '100%', borderCollapse: 'separate', borderSpacing: '0 0.5rem'}}>
-                                    <thead>
-                                        <tr>
-                                            <th style={{padding: '0.75rem', textAlign: 'left'}} className="text-strong">Level</th>
-                                            <th style={{padding: '0.75rem', textAlign: 'left'}} className="text-strong">User</th>
-                                            <th style={{padding: '0.75rem', textAlign: 'left'}} className="text-strong">Designation</th>
-                                            <th style={{padding: '0.75rem', textAlign: 'left'}} className="text-strong">Email</th>
-                                            <th style={{padding: '0.75rem', textAlign: 'left'}} className="text-strong">Contact Number</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {escalationMatrix.map((item, index) => (
-                                            <tr key={item.email + index} className="neumorph-outset" style={{borderRadius: '12px'}}>
-                                                <td style={{padding: '1rem'}} className="text-strong">{item.Level}</td>
-                                                <td style={{padding: '1rem'}}>{item.User}</td>
-                                                <td style={{padding: '1rem'}}>{item.Designation}</td>
-                                                <td style={{padding: '1rem'}}>{item.Email}</td>
-                                                <td style={{padding: '1rem'}}>{item['Contact Number']}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </div>
-                );
-            case 'overview':
-            default:
-                return (
-                    <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem'}}>
-                      <StatTile title="Total Projects" value={projects.length} onClick={() => navigate('/admin/projects')} icon={<span>&#128188;</span>} />
-                      <StatTile title="Total Users" value={users.length} onClick={() => navigate('/admin/users')} icon={<span>&#128101;</span>} />
-                    </div>
-                );
-        }
-    };
-    
-    return (
-        <div>
-            <div style={{display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap'}}>
-                <DashboardTabButton active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} icon={<span>&#128202;</span>}>Overview</DashboardTabButton>
-                <DashboardTabButton active={activeTab === 'hierarchy'} onClick={() => setActiveTab('hierarchy')} icon={<span>&#128101;</span>}>User Hierarchy</DashboardTabButton>
-                <DashboardTabButton active={activeTab === 'escalation'} onClick={() => setActiveTab('escalation')} icon={<span>&#128226;</span>}>Escalation Matrix</DashboardTabButton>
+  return (
+    <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '1rem'}}>
+      <div className="neumorph-outset" style={{width: '100%', maxWidth: '420px', padding: '2rem'}}>
+        <div style={{textAlign: 'center', marginBottom: '2rem'}}>
+            <div className="neumorph-outset" style={{width: '90px', height: '90px', margin: '0 auto', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                <img src={LogoOnly} alt="Alignzo Logo" style={{width: '50px', height: '50px'}} />
             </div>
-            <div>
-                {renderContent()}
-            </div>
+            <h1 className="text-primary" style={{fontSize: '2.5rem', fontWeight: '700', marginTop: '1rem', color: 'var(--light-primary)'}}>Alignzo</h1>
+            <p style={{marginTop: '0.5rem', fontWeight: 500}}>Smarter Alignment. Smarter Operations.</p>
         </div>
-    );
+        
+        <div style={{display: 'flex', marginBottom: '2rem', gap: '1rem'}}>
+            <TabButton active={activeTab === 'user'} onClick={() => setActiveTab('user')}>User</TabButton>
+            <TabButton active={activeTab === 'admin'} onClick={() => setActiveTab('admin')}>Admin</TabButton>
+        </div>
+
+        <div style={{paddingTop: '1rem'}}>
+            {activeTab === 'user' ? (
+                <button onClick={handleGoogleLogin} disabled={isAppLoading} className="btn neumorph-outset" style={{width: '100%'}}>
+                    {isAppLoading ? 'Verifying...' : <><GoogleIcon /> Sign in with Google</>}
+                </button>
+            ) : (
+                <form onSubmit={handleAdminLogin} style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
+                  <div className="neumorph-inset"><input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" className="input-field" /></div>
+                  <div className="neumorph-inset"><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" className="input-field" /></div>
+                  <button type="submit" disabled={isAppLoading} className="btn neumorph-outset btn-primary">
+                    {isAppLoading ? 'Logging in...' : 'Admin Login'}
+                  </button>
+                </form>
+            )}
+        </div>
+        {error && <p style={{color: 'red', textAlign: 'center', paddingTop: '1rem', fontWeight: 500}}>{error}</p>}
+      </div>
+    </div>
+  );
 };
 
-export default AdminDashboardPage;
+export default CombinedLoginPage;
