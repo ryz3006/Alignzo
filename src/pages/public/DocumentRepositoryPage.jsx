@@ -8,10 +8,13 @@ const MultiSelectDropdown = ({ options, selected, onSelectionChange, placeholder
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
 
+    // Ensure options is always an array to prevent .filter error
+    const safeOptions = options || [];
+
     const filteredOptions = useMemo(() => 
-        options.filter(option => 
+        safeOptions.filter(option => 
             option.toLowerCase().includes(searchTerm.toLowerCase())
-        ), [options, searchTerm]);
+        ), [safeOptions, searchTerm]);
 
     const handleToggleOption = (optionValue) => {
         const newSelection = selected.includes(optionValue)
@@ -85,9 +88,10 @@ const DocumentRepositoryPage = () => {
             setIsAppLoading(false);
         });
         
+        // This was the source of the error. The subcollection for settings is 'projectSettings', not 'settings'
         const settingsRef = doc(db, 'projects', selectedProject.id);
         const unsubModules = onSnapshot(settingsRef, docSnap => {
-            setModules(docSnap.exists() ? docSnap.data().modules : []);
+            setModules(docSnap.exists() ? (docSnap.data().modules || []) : []);
         });
 
         return () => { unsubDocs(); unsubModules(); };
@@ -143,59 +147,56 @@ const DocumentRepositoryPage = () => {
     const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
 
     return (
-        <>
-            <div className="neumorph-outset" style={{padding: '1.5rem', borderRadius: '12px'}}>
-                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem'}}>
-                   <div className="neumorph-inset" style={{padding: '0.25rem', borderRadius: '12px', flexGrow: 1}}>
-                     <input
-                      type="text"
-                      placeholder="Search name or description..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="input-field"
-                      style={{minWidth: '250px'}}
-                    />
-                   </div>
-                   <div className="neumorph-inset" style={{padding: '0.25rem', borderRadius: '12px'}}>
-                     <select onChange={(e) => setModuleFilter(e.target.value)} value={moduleFilter} className="input-field">
-                        <option value="">Filter by Module...</option>
-                        {modules.map(m => <option key={m} value={m}>{m}</option>)}
-                     </select>
-                   </div>
-                  <button onClick={openCreateModal} className="btn neumorph-outset" style={{color: '#28a745', fontWeight: '600'}}>+ Add Document</button>
-                </div>
-                
-                <div style={{overflowX: 'auto'}}>
-                    <table style={{width: '100%', borderCollapse: 'separate', borderSpacing: '0 0.5rem'}}>
-                        <thead>
-                            <tr>
-                                <th style={{padding: '0.75rem', textAlign: 'left'}} className="text-strong">Document Name</th>
-                                <th style={{padding: '0.75rem', textAlign: 'left'}} className="text-strong">Link</th>
-                                <th style={{padding: '0.75rem', textAlign: 'left'}} className="text-strong">Modules</th>
-                                <th style={{padding: '0.75rem', textAlign: 'right'}} className="text-strong">Actions</th>
+        <div className="neumorph-outset" style={{padding: '1.5rem', borderRadius: '12px'}}>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem'}}>
+               <div className="neumorph-inset" style={{padding: '0.25rem', borderRadius: '12px', flexGrow: 1}}>
+                 <input
+                  type="text"
+                  placeholder="Search by name or description..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="input-field"
+                  style={{minWidth: '250px'}}
+                />
+               </div>
+               <div className="neumorph-inset" style={{padding: '0.25rem', borderRadius: '12px'}}>
+                 <select onChange={(e) => setModuleFilter(e.target.value)} value={moduleFilter} className="input-field">
+                    <option value="">Filter by Module...</option>
+                    {modules.map(m => <option key={m} value={m}>{m}</option>)}
+                 </select>
+               </div>
+              <button onClick={openCreateModal} className="btn neumorph-outset" style={{color: '#28a745', fontWeight: '600'}}>+ Add Document</button>
+            </div>
+            
+            <div style={{overflowX: 'auto'}}>
+                <table style={{width: '100%', borderCollapse: 'separate', borderSpacing: '0 0.5rem'}}>
+                    <thead>
+                        <tr>
+                            <th style={{padding: '0.75rem', textAlign: 'left'}} className="text-strong">Document Name</th>
+                            <th style={{padding: '0.75rem', textAlign: 'left'}} className="text-strong">Link</th>
+                            <th style={{padding: '0.75rem', textAlign: 'left'}} className="text-strong">Modules</th>
+                            <th style={{padding: '0.75rem', textAlign: 'right'}} className="text-strong">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {paginatedDocuments.map(doc => (
+                            <tr key={doc.id} className="neumorph-outset" style={{borderRadius: '12px'}}>
+                                <td style={{padding: '1rem'}} className="text-strong">{doc.name}</td>
+                                <td style={{padding: '1rem'}}><a href={doc.link} target="_blank" rel="noopener noreferrer" className="text-primary" style={{textDecoration: 'underline'}}>Open Link</a></td>
+                                <td style={{padding: '1rem'}}>{(doc.modules || []).join(', ')}</td>
+                                <td style={{padding: '1rem', textAlign: 'right'}}>
+                                    <button onClick={() => openEditModal(doc)} style={{marginRight: '1rem', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '1.25rem'}} className="text-primary">&#9998;</button>
+                                    <button onClick={() => handleDelete(doc.id)} style={{color: '#e53e3e', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '1.25rem'}}>&#128465;</button>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            {paginatedDocuments.map(doc => (
-                                <tr key={doc.id} className="neumorph-outset" style={{borderRadius: '12px'}}>
-                                    <td style={{padding: '1rem'}} className="text-strong">{doc.name}</td>
-                                    <td style={{padding: '1rem'}}><a href={doc.link} target="_blank" rel="noopener noreferrer" className="text-primary" style={{textDecoration: 'underline'}}>Open Link</a></td>
-                                    <td style={{padding: '1rem'}}>{(doc.modules || []).join(', ')}</td>
-                                    <td style={{padding: '1rem', textAlign: 'right'}}>
-                                        <button onClick={() => openEditModal(doc)} style={{marginRight: '1rem', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '1.25rem'}} className="text-primary">&#9998;</button>
-                                        <button onClick={() => handleDelete(doc.id)} style={{color: '#e53e3e', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '1.25rem'}}>&#128465;</button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem'}}>
-                    <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1} className="btn neumorph-outset" style={{opacity: currentPage === 1 ? 0.5 : 1}}>Previous</button>
-                    <span className="text-strong">Page {currentPage} of {totalPages > 0 ? totalPages : 1}</span>
-                    <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage >= totalPages} className="btn neumorph-outset" style={{opacity: currentPage >= totalPages ? 0.5 : 1}}>Next</button>
-                </div>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem'}}>
+                <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1} className="btn neumorph-outset" style={{opacity: currentPage === 1 ? 0.5 : 1}}>Previous</button>
+                <span className="text-strong">Page {currentPage} of {totalPages > 0 ? totalPages : 1}</span>
+                <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage >= totalPages} className="btn neumorph-outset" style={{opacity: currentPage >= totalPages ? 0.5 : 1}}>Next</button>
             </div>
 
             {isModalOpen && (
@@ -205,7 +206,7 @@ const DocumentRepositoryPage = () => {
                         <h2 style={{fontSize: '1.5rem', fontWeight: '700', marginBottom: '2rem'}} className="text-strong">{isEditing ? 'Edit Document' : 'Add New Document'}</h2>
                         <form onSubmit={handleFormSubmit} style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
                             <div className="neumorph-inset"><input type="text" name="name" value={currentDoc.name} onChange={handleInputChange} placeholder="Document Name" required className="input-field" /></div>
-                            <div className="neumorph-inset"><textarea name="description" value={currentDoc.description} onChange={handleInputChange} placeholder="Description" className="input-field" style={{height: '80px'}}></textarea></div>
+                            <div className="neumorph-inset"><textarea name="description" value={currentDoc.description || ''} onChange={handleInputChange} placeholder="Description" className="input-field" style={{height: '80px'}}></textarea></div>
                             <div className="neumorph-inset"><input type="url" name="link" value={currentDoc.link} onChange={handleInputChange} placeholder="Document Link (URL)" required className="input-field" /></div>
                             <div>
                                 <label className="text-strong" style={{marginBottom: '0.5rem', display: 'block'}}>Modules</label>
@@ -218,7 +219,7 @@ const DocumentRepositoryPage = () => {
                             </div>
                             <div style={{display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem'}}>
                                 <button type="button" onClick={() => setIsModalOpen(false)} className="btn neumorph-outset">Cancel</button>
-                                <button type="submit" className="btn neumorph-outset btn-primary">{isEditing ? 'Save Changes' : 'Add Document'}</button>
+                                <button type="submit" className="btn neumorph-outset" style={{color: 'white', backgroundColor: 'var(--light-primary)'}}>{isEditing ? 'Save Changes' : 'Add Document'}</button>
                             </div>
                         </form>
                     </div>
