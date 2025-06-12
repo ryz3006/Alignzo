@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useTheme } from '../../contexts/ThemeContext.jsx';
+import { useProject } from '../../contexts/ProjectContext.jsx'; // Import project context
 import { useNavigate, useLocation } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebase.js';
@@ -15,6 +16,7 @@ const MenuIcon = ({ onClick }) => <button onClick={onClick} className="md:hidden
 const Header = ({ onMenuClick }) => {
     const { currentUser } = useAuth();
     const { theme, toggleTheme } = useTheme();
+    const { selectedProject, clearProject } = useProject(); // Get project context
     const navigate = useNavigate();
     const location = useLocation();
     const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -31,6 +33,7 @@ const Header = ({ onMenuClick }) => {
     const handleLogout = async () => {
         try {
             await signOut(auth);
+            clearProject();
             navigate('/');
         } catch (error) {
             console.error("Logout error:", error);
@@ -40,7 +43,11 @@ const Header = ({ onMenuClick }) => {
     return (
          <header className="neumorph-outset" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1.5rem', borderRadius: '0', flexShrink: 0 }}>
             <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
-                <h1 style={{fontSize: '1.5rem', fontWeight: '600'}} className="text-primary">{getPageTitle()}</h1>
+                <div className="md:hidden"><MenuIcon onClick={onMenuClick} /></div>
+                <div>
+                    <h1 style={{fontSize: '1.5rem', fontWeight: '600', margin: 0}} className="text-primary">{getPageTitle()}</h1>
+                    {selectedProject && <p style={{margin: 0, fontSize: '0.8rem', opacity: 0.7}}>{selectedProject.name}</p>}
+                </div>
             </div>
              <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
                  <button onClick={toggleTheme} className="btn neumorph-outset" style={{borderRadius: '50%', padding: '0.75rem'}}>
