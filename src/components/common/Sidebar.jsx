@@ -45,7 +45,6 @@ const Sidebar = ({ isMobileOpen, setMobileOpen }) => {
     ];
     const publicNavItems = [
         { to: "/user/dashboard", label: "Dashboard", icon: <DashboardIcon /> },
-        { to: "/user/project-board", label: "Project Board", icon: <KanbanIcon /> },
         { to: "/user/project-operations", label: "Project Operations", icon: <ListIcon /> },
         { to: "/user/work-tracker", label: "Work Tracker", icon: <TrackerIcon /> },
         { to: "/user/profile", label: "My Profile", icon: <ProfileIcon /> },
