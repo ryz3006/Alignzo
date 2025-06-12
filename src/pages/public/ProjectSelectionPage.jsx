@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../../firebase';
 import { signOut } from 'firebase/auth';
-import { collection, doc, getDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, query, where, getDocs } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
+import { useProject } from '../../contexts/ProjectContext'; // Import project context hook
 import LogoOnly from '../../assets/images/Logo_only.png';
 
 const ProjectSelectionPage = () => {
   const [projects, setProjects] = useState([]);
   const [error, setError] = useState('');
   const { isAppLoading, setIsAppLoading } = useAuth();
+  const { loadProject } = useProject(); // Use context
   const navigate = useNavigate();
   const user = auth.currentUser;
 
@@ -23,8 +25,6 @@ const ProjectSelectionPage = () => {
       setError('');
       setIsAppLoading(true);
       try {
-        // Use a direct 'get' on the user's document using their email as the document ID.
-        // This now matches the security rule: allow get: if request.auth.token.email == userEmail;
         const userDocRef = doc(db, "users", user.email);
         const userDocSnap = await getDoc(userDocRef);
 
@@ -33,7 +33,6 @@ const ProjectSelectionPage = () => {
           const projectIds = userData.mappedProjects || [];
 
           if (projectIds.length > 0) {
-            // Fetch each project document individually using getDoc
             const projectPromises = projectIds.map(id => getDoc(doc(db, "projects", id)));
             const projectSnapshots = await Promise.all(projectPromises);
             
@@ -46,7 +45,6 @@ const ProjectSelectionPage = () => {
              navigate('/no-projects');
           }
         } else {
-            // If the user's document doesn't exist, they are not authorized.
             await signOut(auth);
             setError("Access denied. Please contact your administrator.");
         }
@@ -65,8 +63,10 @@ const ProjectSelectionPage = () => {
     fetchUserAndProjects();
   }, [user, navigate, setIsAppLoading]);
 
-  const selectProject = (projectId) => {
-    sessionStorage.setItem('selectedProject', projectId);
+  const handleSelectProject = async (projectId) => {
+    setIsAppLoading(true);
+    await loadProject(projectId);
+    setIsAppLoading(false);
     navigate('/user/dashboard');
   };
 
@@ -100,7 +100,7 @@ const ProjectSelectionPage = () => {
             {projects.map(project => (
                 <button 
                     key={project.id} 
-                    onClick={() => selectProject(project.id)} 
+                    onClick={() => handleSelectProject(project.id)} 
                     className="btn neumorph-outset"
                     style={{justifyContent: 'space-between', textAlign: 'left'}}
                 >
