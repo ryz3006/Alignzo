@@ -2,16 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../../firebase';
 import { signOut } from 'firebase/auth';
-import { collection, doc, getDoc, query, where, getDocs } from 'firebase/firestore';
+import { collection, doc, getDoc } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
-import { useProject } from '../../contexts/ProjectContext'; // Import project context hook
 import LogoOnly from '../../assets/images/Logo_only.png';
 
 const ProjectSelectionPage = () => {
   const [projects, setProjects] = useState([]);
   const [error, setError] = useState('');
   const { isAppLoading, setIsAppLoading } = useAuth();
-  const { loadProject } = useProject(); // Use context
   const navigate = useNavigate();
   const user = auth.currentUser;
 
@@ -25,15 +23,17 @@ const ProjectSelectionPage = () => {
       setError('');
       setIsAppLoading(true);
       try {
-        const usersRef = collection(db, "users");
-        const q = query(usersRef, where("email", "==", user.email));
-        const userQuerySnapshot = await getDocs(q);
+        // Use a direct 'get' on the user's document using their email as the document ID.
+        // This now matches the security rule: allow get: if request.auth.token.email == userEmail;
+        const userDocRef = doc(db, "users", user.email);
+        const userDocSnap = await getDoc(userDocRef);
 
-        if (!userQuerySnapshot.empty) {
-          const userData = userQuerySnapshot.docs[0].data();
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data();
           const projectIds = userData.mappedProjects || [];
 
           if (projectIds.length > 0) {
+            // Fetch each project document individually using getDoc
             const projectPromises = projectIds.map(id => getDoc(doc(db, "projects", id)));
             const projectSnapshots = await Promise.all(projectPromises);
             
@@ -46,12 +46,17 @@ const ProjectSelectionPage = () => {
              navigate('/no-projects');
           }
         } else {
+            // If the user's document doesn't exist, they are not authorized.
             await signOut(auth);
             setError("Access denied. Please contact your administrator.");
         }
       } catch (error) {
           console.error("Error fetching user projects:", error);
           setError("Could not load your projects. Please try again later.");
+          if (error.code === 'permission-denied') {
+              await signOut(auth);
+              navigate('/');
+          }
       } finally {
         setIsAppLoading(false);
       }
@@ -60,8 +65,8 @@ const ProjectSelectionPage = () => {
     fetchUserAndProjects();
   }, [user, navigate, setIsAppLoading]);
 
-  const handleSelectProject = async (projectId) => {
-    await loadProject(projectId); // Set project in context
+  const selectProject = (projectId) => {
+    sessionStorage.setItem('selectedProject', projectId);
     navigate('/user/dashboard');
   };
 
@@ -95,7 +100,7 @@ const ProjectSelectionPage = () => {
             {projects.map(project => (
                 <button 
                     key={project.id} 
-                    onClick={() => handleSelectProject(project.id)} 
+                    onClick={() => selectProject(project.id)} 
                     className="btn neumorph-outset"
                     style={{justifyContent: 'space-between', textAlign: 'left'}}
                 >
