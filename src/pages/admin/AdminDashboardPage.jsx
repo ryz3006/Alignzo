@@ -86,7 +86,7 @@ const UserNode = ({ user, allUsers, level }) => {
 };
 
 const DashboardTabButton = ({ active, onClick, children, icon }) => (
-    <button type="button" onClick={onClick} className={`modern-tab-btn ${active ? 'active' : ''}`}>
+    <button type="button" onClick={onClick} className={`login-tab-btn ${active ? 'active' : ''}`}>
         <span style={{width: '24px', height: '24px'}}>{icon}</span>
         <span className="hidden md:inline">{children}</span>
     </button>
