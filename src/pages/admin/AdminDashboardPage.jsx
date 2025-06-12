@@ -142,11 +142,32 @@ const AdminDashboardPage = () => {
     const escalationMatrix = useMemo(() => {
         if (!selectedProject) return [];
         const projectUsers = users.filter(u => (u.mappedProjects || []).includes(selectedProjectId));
-        const getSortOrder = (designation) => {
-            const order = [...designations].reverse().indexOf(designation);
-            return order === -1 ? Infinity : order;
+        const userMapForProject = projectUsers.reduce((acc, u) => ({...acc, [u.id]: u}), {});
+
+        const getDepth = (userId, memo = {}) => {
+            if (memo[userId] !== undefined) return memo[userId];
+            const user = userMapForProject[userId];
+            if (!user || !user.reportingTo || !userMapForProject[user.reportingTo]) {
+                memo[userId] = 0;
+                return 0;
+            }
+            const depth = 1 + getDepth(user.reportingTo, memo);
+            memo[userId] = depth;
+            return depth;
         };
-        const sortedUsers = projectUsers.sort((a, b) => getSortOrder(a.designation) - getSortOrder(b.designation));
+        
+        projectUsers.forEach(user => { user.depth = getDepth(user.id); });
+        
+        const getDesignationRank = (designation) => {
+            const index = designations.indexOf(designation);
+            return index === -1 ? Infinity : index;
+        };
+
+        const sortedUsers = projectUsers.sort((a, b) => {
+            if (a.depth < b.depth) return -1;
+            if (a.depth > b.depth) return 1;
+            return getDesignationRank(a.designation) - getDesignationRank(b.designation);
+        });
 
         const matrix = [];
         if (selectedProject.commonContactEmail || selectedProject.commonContactNumber) {
@@ -160,9 +181,9 @@ const AdminDashboardPage = () => {
         }
         if (sortedUsers.length > 0) {
             let levelCounter = matrix.length + 1;
-            let lastDesignation = sortedUsers[0]?.designation;
+            let lastDepth = sortedUsers[0]?.depth;
             sortedUsers.forEach((user, index) => {
-                if (index > 0 && user.designation !== lastDesignation) {
+                if (index > 0 && user.depth !== lastDepth) {
                     levelCounter++;
                 }
                 matrix.push({
@@ -172,7 +193,7 @@ const AdminDashboardPage = () => {
                     Email: user.email,
                     'Contact Number': user.contactNumber || 'N/A'
                 });
-                lastDesignation = user.designation;
+                lastDepth = user.depth;
             });
         }
         return matrix;
@@ -217,7 +238,7 @@ const AdminDashboardPage = () => {
                             <DownloadButton onClick={() => downloadAsExcel(hierarchyData, 'user-hierarchy', 'User Hierarchy')}>&#128196; Excel</DownloadButton>
                             <DownloadButton onClick={() => downloadAsPdf(hierarchyData, 'User Hierarchy', 'user-hierarchy')}>&#128196; PDF</DownloadButton>
                         </div>
-                        {users.filter(u => !u.reportingTo).map(user => <UserNode key={user.id} user={user} allUsers={users} level={0} />)}
+                        {users.filter(u => !u.reportingTo).map(user => <UserNode key={user.id} user={user} allUsers={users} />)}
                     </div>
                 );
             case 'escalation':
