@@ -54,11 +54,26 @@ const Sidebar = ({ isMobileOpen, setMobileOpen }) => {
         { to: "/user/project-settings", label: "Project Settings", icon: <ProjectSettingsIcon /> },
     ];
     const navItems = isAdmin ? adminNavItems : publicNavItems;
-    
+
+    const isMobileScreen = window.innerWidth < 768;
+  
     const responsiveClasses = `absolute inset-y-0 left-0 transform ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0`;
 
-    return (
-        <aside className={`neumorph-outset flex flex-col p-2 transition-all duration-300 ease-in-out z-20 flex-shrink-0 ${isMinimized ? 'w-24' : 'w-60'} ${responsiveClasses}`} style={{borderRadius: '0'}}>
+    const sidebarStyle = {
+        display: 'flex',
+        flexDirection: 'column',
+        padding: '1rem',
+        transition: 'width 0.3s ease-in-out, transform 0.3s ease-in-out',
+        width: isMinimized ? '80px' : '240px',
+        zIndex: 20,
+        flexShrink: 0,
+        position: isMobileScreen ? 'fixed' : 'relative',
+        height: '100%',
+        transform: isMobileScreen ? (isMobileOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)',
+        borderRadius: '0'
+    };
+   return (
+        <aside className="neumorph-outset" style={sidebarStyle}>
             <style>{`
                 .nav-link { display: flex; align-items: center; padding: 0.75rem; border-radius: 12px; transition: all 0.2s ease; color: var(--light-text); text-decoration: none; }
                 html.dark .nav-link { color: var(--dark-text); }
@@ -66,6 +81,7 @@ const Sidebar = ({ isMobileOpen, setMobileOpen }) => {
                 html.dark .nav-link.active { box-shadow: inset 5px 5px 10px var(--dark-shadow-dark), inset -5px -5px 10px var(--dark-shadow-light); color: var(--dark-primary); }
                 .nav-link:not(.active):hover { transform: translateY(-2px); box-shadow: 4px 4px 8px var(--light-shadow-dark), -4px -4px 8px var(--light-shadow-light); }
                 html.dark .nav-link:not(.active):hover { box-shadow: 4px 4px 8px var(--dark-shadow-dark), -4px -4px 8px var(--dark-shadow-light); }
+                @media (max-width: 767px) { .hidden-on-mobile { display: none; } }
             `}</style>
             <div style={{height: '3rem', margin: '0.5rem 0 2rem 0', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                 <img src={isMinimized ? LogoOnly : LogoWithName} alt="Alignzo Logo" style={{height: '2.5rem', transition: 'all 0.3s'}} />
@@ -75,7 +91,7 @@ const Sidebar = ({ isMobileOpen, setMobileOpen }) => {
                     <NavLink
                         key={item.label}
                         to={item.to}
-                        onClick={() => { if(window.innerWidth < 768) setMobileOpen(false) }}
+                        onClick={() => isMobileOpen && setMobileOpen(false)}
                         className={({ isActive }) => `nav-link ${isActive ? 'active' : ''} ${isMinimized ? 'justify-center' : ''}`}
                     >
                         <div style={{width: '24px', flexShrink: 0}}>{item.icon}</div>
@@ -83,7 +99,7 @@ const Sidebar = ({ isMobileOpen, setMobileOpen }) => {
                     </NavLink>
                 ))}
             </nav>
-            <div style={{padding: '0.5rem'}} className="hidden md:block">
+            <div style={{padding: '0.5rem'}} className="hidden-on-mobile">
                 <button onClick={() => setIsMinimized(!isMinimized)} className="btn neumorph-outset" style={{padding: '0.75rem', width: '100%'}}>
                     <span className="text-strong">{isMinimized ? <DoubleArrowRightIcon /> : <DoubleArrowLeftIcon />}</span>
                 </button>
