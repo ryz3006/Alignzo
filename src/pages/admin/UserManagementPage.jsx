@@ -67,7 +67,7 @@ const UserManagementPage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [reportingToFilter, setReportingToFilter] = useState('');
+  const [projectFilter, setProjectFilter] = useState(''); // New filter state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   
@@ -80,7 +80,6 @@ const UserManagementPage = () => {
     setIsAppLoading(true);
     const unsubUsers = onSnapshot(collection(db, "users"), (snap) => {
         setUsers(snap.docs.map(d => ({id: d.id, ...d.data()})));
-        // Turn off loading once the main user data is loaded
         setIsAppLoading(false);
     }, (error) => {
         console.error("Error fetching users:", error);
@@ -91,7 +90,7 @@ const UserManagementPage = () => {
     const unsubDesignations = onSnapshot(doc(db, 'settings', 'designations'), d => setDesignations(d.exists() ? d.data().list : []));
     
     return () => { unsubUsers(); unsubProjects(); unsubDesignations(); };
-  }, [setIsAppLoading]); // Dependency array should only contain stable functions
+  }, [setIsAppLoading]);
   
   const sortedUsers = useMemo(() => {
     const getSortOrder = (designation) => {
@@ -103,8 +102,8 @@ const UserManagementPage = () => {
 
   const filteredUsers = useMemo(() => sortedUsers.filter(u => 
       ((u.displayName || u.email).toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (reportingToFilter ? u.reportingTo === reportingToFilter : true)
-  ), [sortedUsers, searchTerm, reportingToFilter]);
+      (projectFilter ? (u.mappedProjects || []).includes(projectFilter) : true)
+  ), [sortedUsers, searchTerm, projectFilter]);
 
   const paginatedUsers = useMemo(() => filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage), [filteredUsers, currentPage]);
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
@@ -276,9 +275,9 @@ const UserManagementPage = () => {
             />
            </div>
            <div className="neumorph-inset" style={{padding: '0.25rem', borderRadius: '12px'}}>
-             <select onChange={(e) => setReportingToFilter(e.target.value)} value={reportingToFilter} className="input-field">
-                <option value="">Filter by Manager...</option>
-                {users.map(u => <option key={u.id} value={u.id}>{u.displayName || u.email}</option>)}
+             <select onChange={(e) => setProjectFilter(e.target.value)} value={projectFilter} className="input-field">
+                <option value="">Filter by Project...</option>
+                {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
              </select>
            </div>
           <button onClick={openAddUserModal} className="btn neumorph-outset" style={{color: '#28a745', fontWeight: '600'}}>+ Add User</button>
