@@ -5,13 +5,8 @@ import ProjectManagementPage from '../pages/admin/ProjectManagementPage.jsx';
 import UserManagementPage from '../pages/admin/UserManagementPage.jsx';
 import SettingsPage from '../pages/admin/SettingsPage.jsx';
 import PublicDashboardPage from '../pages/public/DashboardPage.jsx';
-import ProjectBoardPage from '../pages/public/ProjectBoardPage.jsx';
-import ProjectOperationsPage from '../pages/public/ProjectOperationsPage.jsx';
-import WorkTrackerPage from '../pages/public/WorkTrackerPage.jsx';
-import ProfilePage from '../pages/public/ProfilePage.jsx';
-import ShiftSchedulePage from '../pages/public/ShiftSchedulePage.jsx';
 import DocumentRepositoryPage from '../pages/public/DocumentRepositoryPage.jsx';
-import ProjectSettingsPage from '../pages/public/ProjectSettingsPage.jsx';
+// ... other imports
 import Sidebar from '../components/common/Sidebar.jsx';
 import Header from '../components/common/Header.jsx';
 import { useAuth } from '../contexts/AuthContext.jsx';
@@ -37,13 +32,8 @@ const AppLayout = () => {
                         ) : (
                             <>
                                 <Route path="user/dashboard" element={<PublicDashboardPage />} />
-                                <Route path="user/project-board" element={<ProjectBoardPage />} />
-                                <Route path="user/project-operations" element={<ProjectOperationsPage />} />
-                                <Route path="user/work-tracker" element={<WorkTrackerPage />} />
-                                <Route path="user/profile" element={<ProfilePage />} />
-                                <Route path="user/shift-schedule" element={<ShiftSchedulePage />} />
                                 <Route path="user/documents" element={<DocumentRepositoryPage />} />
-                                <Route path="user/project-settings" element={<ProjectSettingsPage />} />
+                                {/* ...other public routes... */}
                             </>
                         )}
                          <Route path="*" element={<Navigate to={isAdmin ? "/admin/dashboard" : "/user/dashboard"} replace />} />
