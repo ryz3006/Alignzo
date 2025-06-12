@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../firebase';
 import { collection, doc, onSnapshot } from 'firebase/firestore';
+import { useAuth } from '../../contexts/AuthContext';
 
 // Helper function to dynamically load scripts if they aren't already loaded
 const loadScript = (src) => {
@@ -105,20 +106,28 @@ const AdminDashboardPage = () => {
     const [projects, setProjects] = useState([]);
     const [designations, setDesignations] = useState([]);
     const [selectedProjectId, setSelectedProjectId] = useState('');
+    const { setIsAppLoading } = useAuth();
     const navigate = useNavigate();
 
     useEffect(() => {
+
         Promise.all([
             loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"),
             loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"),
             loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js")
         ]).catch(error => console.error("Could not load download scripts:", error));
-
-        const unsubUsers = onSnapshot(collection(db, "users"), snap => setUsers(snap.docs.map(d => ({id: d.id, ...d.data()}))));
+        
+        setIsAppLoading(true);
+        const unsubUsers = onSnapshot(collection(db, "users"), snap => {
+            setUsers(snap.docs.map(d => ({id: d.id, ...d.data()})));
+            setIsAppLoading(false);
+        });
         const unsubProjects = onSnapshot(collection(db, "projects"), snap => setProjects(snap.docs.map(d => ({id: d.id, ...d.data()}))));
         const unsubDesignations = onSnapshot(doc(db, 'settings', 'designations'), d => setDesignations(d.exists() ? d.data().list : []));
+        
         return () => { unsubUsers(); unsubProjects(); unsubDesignations(); };
-    }, []);
+    }, [setIsAppLoading]);
+    
     
     const userMap = useMemo(() => users.reduce((acc, u) => ({...acc, [u.id]: u}), {}), [users]);
     const hierarchyData = useMemo(() => {
