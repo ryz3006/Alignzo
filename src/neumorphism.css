@@ -88,10 +88,29 @@ html.dark .btn-primary {
   padding: 12px 16px;
   border: none;
   background-color: transparent;
-  color: var(--light-text);
+  color: var(--light-text-strong);
 }
-html.dark .input-field { color: var(--dark-text); }
+html.dark .input-field { color: var(--dark-text-strong); }
 .input-field:focus { outline: none; }
+
+/* --- NEW: Input Autofill Styles --- */
+.input-field:-webkit-autofill,
+.input-field:-webkit-autofill:hover, 
+.input-field:-webkit-autofill:focus, 
+.input-field:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px var(--light-bg) inset !important;
+    box-shadow: 0 0 0 30px var(--light-bg) inset !important;
+    -webkit-text-fill-color: var(--light-text-strong) !important;
+}
+
+html.dark .input-field:-webkit-autofill,
+html.dark .input-field:-webkit-autofill:hover, 
+html.dark .input-field:-webkit-autofill:focus, 
+html.dark .input-field:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px var(--dark-bg) inset !important;
+    box-shadow: 0 0 0 30px var(--dark-bg) inset !important;
+    -webkit-text-fill-color: var(--dark-text-strong) !important;
+}
 
 /* New Animated Login Tab Styles */
 .login-tab-btn {
@@ -139,24 +158,4 @@ html.dark .login-tab-btn::after, html.dark .login-tab-btn::before {
 html.dark .login-tab-btn:hover, html.dark .login-tab-btn.active {
   box-shadow: inset 0px 0px 25px var(--dark-primary-dark);
   color: var(--dark-primary);
-}
-
-
-/* --- NEW: Input Autofill Styles --- */
-.input-field:-webkit-autofill,
-.input-field:-webkit-autofill:hover, 
-.input-field:-webkit-autofill:focus, 
-.input-field:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 30px var(--light-bg) inset !important;
-    box-shadow: 0 0 0 30px var(--light-bg) inset !important;
-    -webkit-text-fill-color: var(--light-text-strong) !important;
-}
-
-html.dark .input-field:-webkit-autofill,
-html.dark .input-field:-webkit-autofill:hover, 
-html.dark .input-field:-webkit-autofill:focus, 
-html.dark .input-field:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 30px var(--dark-bg) inset !important;
-    box-shadow: 0 0 0 30px var(--dark-bg) inset !important;
-    -webkit-text-fill-color: var(--dark-text-strong) !important;
 }
