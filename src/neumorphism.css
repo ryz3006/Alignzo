@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
 :root {
   --font-family-main: 'Poppins', sans-serif;
   
@@ -75,6 +77,13 @@ html.dark .neumorph-inset {
 html.dark .btn:active {
   box-shadow: inset 4px 4px 8px var(--dark-shadow-dark), inset -4px -4px 8px var(--dark-shadow-light) !important;
 }
+.btn-primary {
+  color: white;
+  background-color: var(--light-primary);
+}
+html.dark .btn-primary {
+  background-color: var(--dark-primary);
+}
 
 .input-field {
   width: 100%;
@@ -86,52 +95,50 @@ html.dark .btn:active {
 html.dark .input-field { color: var(--dark-text); }
 .input-field:focus { outline: none; }
 
-/* New Animated Login Tab Styles */
-.login-tab-btn {
+/* Modern Animated Tab Styles */
+.modern-tab-btn {
   flex: 1;
   position: relative;
-  height: 3.5em;
-  border: 3px ridge var(--light-primary);
-  outline: none;
-  background-color: transparent;
-  color: var(--light-text-strong);
-  transition: 1s;
-  border-radius: 0.3em;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-}
-html.dark .login-tab-btn {
-  border-color: var(--dark-primary);
-  color: var(--dark-text-strong);
-}
-.login-tab-btn::after, .login-tab-btn::before {
-  content: "";
-  position: absolute;
-  left: 3%;
-  width: 95%;
-  height: 40%;
-  background-color: var(--light-bg);
-  transition: 0.5s;
-  transform-origin: center;
-}
-html.dark .login-tab-btn::after, html.dark .login-tab-btn::before {
-    background-color: var(--dark-bg);
-}
-.login-tab-btn::after { top: -10px; }
-.login-tab-btn::before { top: 80%; }
-.login-tab-btn:hover::before, .login-tab-btn:hover::after,
-.login-tab-btn.active::before, .login-tab-btn.active::after {
-  transform: scale(0);
-}
-.login-tab-btn:hover, .login-tab-btn.active {
-  box-shadow: inset 0px 0px 25px var(--light-primary-dark);
+  padding: 1em 1.5em;
+  text-align: center;
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-decoration: none;
   color: var(--light-primary);
+  background: transparent;
+  cursor: pointer;
+  transition: ease-out 0.5s;
+  border: 2px solid var(--light-primary);
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 0 var(--light-primary);
 }
-html.dark .login-tab-btn:hover, html.dark .login-tab-btn.active {
-  box-shadow: inset 0px 0px 25px var(--dark-primary-dark);
+.modern-tab-btn:hover {
+  color: white;
+  box-shadow: inset 0 -100px 0 0 var(--light-primary);
+}
+.modern-tab-btn.active {
+  color: white;
+  background-color: var(--light-primary);
+  box-shadow: 0px 8px 15px rgba(74, 144, 226, 0.2);
+  transform: translateY(-2px);
+}
+.modern-tab-btn:active {
+  transform: scale(0.95);
+}
+
+html.dark .modern-tab-btn {
   color: var(--dark-primary);
+  border-color: var(--dark-primary);
 }
+html.dark .modern-tab-btn:hover, html.dark .modern-tab-btn.active {
+  color: var(--dark-bg);
+  background-color: var(--dark-primary);
+  box-shadow: inset 0 -100px 0 0 var(--dark-primary);
+}
+html.dark .modern-tab-btn.active {
+    box-shadow: 0px 8px 15px rgba(88, 166, 255, 0.2);
+}
+
 
 /* --- NEW LOADER STYLES --- */
 .loader-overlay {
