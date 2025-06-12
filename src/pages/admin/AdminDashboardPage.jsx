@@ -144,19 +144,21 @@ const AdminDashboardPage = () => {
         const projectUsers = users.filter(u => (u.mappedProjects || []).includes(selectedProjectId));
         const userMapForProject = projectUsers.reduce((acc, u) => ({...acc, [u.id]: u}), {});
 
-        const getDepth = (userId, memo = {}) => {
+        // NEW LOGIC: Calculate management level (bottom-up)
+        const getManagementLevel = (userId, memo = {}) => {
             if (memo[userId] !== undefined) return memo[userId];
-            const user = userMapForProject[userId];
-            if (!user || !user.reportingTo || !userMapForProject[user.reportingTo]) {
+            const subordinates = projectUsers.filter(u => u.reportingTo === userId);
+            if (subordinates.length === 0) {
                 memo[userId] = 0;
                 return 0;
             }
-            const depth = 1 + getDepth(user.reportingTo, memo);
-            memo[userId] = depth;
-            return depth;
+            const maxSubordinateLevel = Math.max(...subordinates.map(s => getManagementLevel(s.id, memo)));
+            const level = 1 + maxSubordinateLevel;
+            memo[userId] = level;
+            return level;
         };
         
-        projectUsers.forEach(user => { user.depth = getDepth(user.id); });
+        projectUsers.forEach(user => { user.managementLevel = getManagementLevel(user.id); });
         
         const getDesignationRank = (designation) => {
             const index = designations.indexOf(designation);
@@ -164,8 +166,8 @@ const AdminDashboardPage = () => {
         };
 
         const sortedUsers = projectUsers.sort((a, b) => {
-            if (a.depth < b.depth) return -1;
-            if (a.depth > b.depth) return 1;
+            if (a.managementLevel < b.managementLevel) return -1;
+            if (a.managementLevel > b.managementLevel) return 1;
             return getDesignationRank(a.designation) - getDesignationRank(b.designation);
         });
 
@@ -181,9 +183,9 @@ const AdminDashboardPage = () => {
         }
         if (sortedUsers.length > 0) {
             let levelCounter = matrix.length + 1;
-            let lastDepth = sortedUsers[0]?.depth;
+            let lastLevel = sortedUsers[0]?.managementLevel;
             sortedUsers.forEach((user, index) => {
-                if (index > 0 && user.depth !== lastDepth) {
+                if (index > 0 && user.managementLevel !== lastLevel) {
                     levelCounter++;
                 }
                 matrix.push({
@@ -193,7 +195,7 @@ const AdminDashboardPage = () => {
                     Email: user.email,
                     'Contact Number': user.contactNumber || 'N/A'
                 });
-                lastDepth = user.depth;
+                lastLevel = user.managementLevel;
             });
         }
         return matrix;
