@@ -62,7 +62,7 @@ const UserManagementPage = () => {
   const [users, setUsers] = useState([]);
   const [projects, setProjects] = useState([]);
   const [designations, setDesignations] = useState([]);
-  const { isAppLoading, setIsAppLoading } = useAuth(); // Use global loader
+  const { setIsAppLoading } = useAuth(); // Use global loader
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -78,11 +78,9 @@ const UserManagementPage = () => {
 
   useEffect(() => {
     setIsAppLoading(true);
-    const unsubUsers = onSnapshot(collection(db, "users"), snap => {
-        const usersData = snap.docs.map(d => ({id: d.id, ...d.data()}));
-        const getSortOrder = (designation) => designations.indexOf(designation);
-        usersData.sort((a, b) => getSortOrder(a.designation) - getSortOrder(b.designation));
-        setUsers(usersData);
+    const unsubUsers = onSnapshot(collection(db, "users"), (snap) => {
+        setUsers(snap.docs.map(d => ({id: d.id, ...d.data()})));
+        // Turn off loading once the main user data is loaded
         setIsAppLoading(false);
     }, (error) => {
         console.error("Error fetching users:", error);
@@ -93,8 +91,24 @@ const UserManagementPage = () => {
     const unsubDesignations = onSnapshot(doc(db, 'settings', 'designations'), d => setDesignations(d.exists() ? d.data().list : []));
     
     return () => { unsubUsers(); unsubProjects(); unsubDesignations(); };
-  }, [designations, setIsAppLoading]);
+  }, [setIsAppLoading]); // Dependency array should only contain stable functions
   
+  const sortedUsers = useMemo(() => {
+    const getSortOrder = (designation) => {
+        const index = designations.indexOf(designation);
+        return index === -1 ? Infinity : index;
+    };
+    return [...users].sort((a, b) => getSortOrder(a.designation) - getSortOrder(b.designation));
+  }, [users, designations]);
+
+  const filteredUsers = useMemo(() => sortedUsers.filter(u => 
+      ((u.displayName || u.email).toLowerCase().includes(searchTerm.toLowerCase())) &&
+      (reportingToFilter ? u.reportingTo === reportingToFilter : true)
+  ), [sortedUsers, searchTerm, reportingToFilter]);
+
+  const paginatedUsers = useMemo(() => filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage), [filteredUsers, currentPage]);
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+
   const getAllSubordinates = (userId, allUsers) => {
     let subordinates = [];
     let queue = [userId];
@@ -247,13 +261,6 @@ const UserManagementPage = () => {
     setCurrentUser(prev => ({ ...prev, mappedProjects: selection }));
   }
 
-  const filteredUsers = users.filter(u => 
-      ((u.displayName || u.email).toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (reportingToFilter ? u.reportingTo === reportingToFilter : true)
-  );
-  const paginatedUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-
   return (
     <>
       <div className="neumorph-outset" style={{padding: '1.5rem', borderRadius: '12px'}}>
@@ -287,8 +294,7 @@ const UserManagementPage = () => {
               </tr>
             </thead>
             <tbody>
-              {isAppLoading && <tr><td colSpan="4" style={{textAlign: 'center', padding: '1rem'}}></td></tr>}
-              {!isAppLoading && paginatedUsers.map(user => (
+              {paginatedUsers.map(user => (
                 <tr key={user.id} className="neumorph-outset" style={{borderRadius: '12px'}}>
                   <td style={{padding: '1rem'}}>{user.displayName || user.email}</td>
                   <td style={{padding: '1rem'}}>{user.designation || 'Not Set'}</td>
