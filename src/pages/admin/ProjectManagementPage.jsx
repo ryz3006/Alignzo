@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { db, auth } from '../../firebase';
 import { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { useAuth } from '../../contexts/AuthContext';
 
 // --- Static Data for Dropdowns ---
 const amcMsoOptions = ["Not Applicable", "AMC", "MSO"];
@@ -12,6 +13,7 @@ const ProjectManagementPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentProject, setCurrentProject] = useState(null);
+  const { isAppLoading, setIsAppLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [countryOptions, setCountryOptions] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -21,6 +23,11 @@ const ProjectManagementPage = () => {
   const userMap = useMemo(() => users.reduce((acc, user) => ({ ...acc, [user.id]: user.displayName || user.email }), {}), [users]);
 
   useEffect(() => {
+    setIsAppLoading(true);
+    const unsub = onSnapshot(collection(db, 'projects'), (snapshot) => {
+      setProjects(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setIsAppLoading(false);
+    });
     const projUnsub = onSnapshot(collection(db, 'projects'), snap => {
         setProjects(snap.docs.map(d => ({id: d.id, ...d.data()})));
         setLoading(false);
@@ -28,7 +35,7 @@ const ProjectManagementPage = () => {
     const userUnsub = onSnapshot(collection(db, 'users'), snap => setUsers(snap.docs.map(d => ({id: d.id, ...d.data()}))));
     const countryUnsub = onSnapshot(doc(db, 'settings', 'countries'), d => setCountryOptions(d.exists() ? d.data().list : []));
     
-    return () => { projUnsub(); userUnsub(); countryUnsub(); };
+    return () => { projUnsub(); userUnsub(); countryUnsub(); unsub(); };
   }, []);
 
   const handleInputChange = (e) => {
@@ -53,8 +60,7 @@ const ProjectManagementPage = () => {
     e.preventDefault();
     if (!currentProject.name || !currentProject.ownerId) return alert("Project Name and Owner are required.");
     
-    let projectData = { ...currentProject };
-
+    setIsAppLoading(true);
     try {
         if (isEditing) {
             const projectRef = doc(db, 'projects', currentProject.id);
@@ -71,11 +77,15 @@ const ProjectManagementPage = () => {
       console.error("Error saving project: ", error);
       alert("Error saving project: " + error.message);
     }
+    finally { setIsAppLoading(false); }
   };
   
   const handleDeleteProject = async (id) => {
     if (window.confirm("Are you sure you want to delete this project?")) {
-        try { await deleteDoc(doc(db, 'projects', id)); } catch (error) { console.error("Error deleting project: ", error); }
+      setIsAppLoading(true);
+        try { await deleteDoc(doc(db, 'projects', id)); } 
+        catch (error) { console.error("Error deleting project: ", error); }
+        finally { setIsAppLoading(false); }
     }
   };
 
