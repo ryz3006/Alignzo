@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithPopup, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth, googleProvider, db } from '../firebase';
-import { doc, getDoc, collection, query, where } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import LogoOnly from '../assets/images/Logo_only.png';
 
