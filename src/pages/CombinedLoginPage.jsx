@@ -18,7 +18,7 @@ const CombinedLoginPage = () => {
   const [activeTab, setActiveTab] = useState('user');
   const [error, setError] = useState('');
   const { isAppLoading, setIsAppLoading } = useAuth();
-  const [username, setUsername] = useState('admin');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
@@ -86,7 +86,7 @@ const CombinedLoginPage = () => {
                 </button>
             ) : (
                 <form onSubmit={handleAdminLogin} style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
-                  <div className="neumorph-inset"><input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" className="input-field" /></div>
+                  <div className="neumorph-inset"><input type="email" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" className="input-field" /></div>
                   <div className="neumorph-inset"><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" className="input-field" /></div>
                   <button type="submit" disabled={isAppLoading} className="btn neumorph-outset btn-primary">
                     {isAppLoading ? 'Logging in...' : 'Admin Login'}
