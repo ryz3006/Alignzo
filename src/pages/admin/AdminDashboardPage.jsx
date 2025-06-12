@@ -143,11 +143,10 @@ const AdminDashboardPage = () => {
         if (!selectedProject) return [];
         const projectUsers = users.filter(u => (u.mappedProjects || []).includes(selectedProjectId));
         const getSortOrder = (designation) => {
-            const order = designations.indexOf(designation); // Use normal index order
+            const order = [...designations].reverse().indexOf(designation);
             return order === -1 ? Infinity : order;
         };
-        // Sort by designation index in descending order (highest index/lowest level first)
-        const sortedUsers = projectUsers.sort((a, b) => getSortOrder(b.designation) - getSortOrder(a.designation));
+        const sortedUsers = projectUsers.sort((a, b) => getSortOrder(a.designation) - getSortOrder(b.designation));
 
         const matrix = [];
         if (selectedProject.commonContactEmail || selectedProject.commonContactNumber) {
@@ -218,7 +217,7 @@ const AdminDashboardPage = () => {
                             <DownloadButton onClick={() => downloadAsExcel(hierarchyData, 'user-hierarchy', 'User Hierarchy')}>&#128196; Excel</DownloadButton>
                             <DownloadButton onClick={() => downloadAsPdf(hierarchyData, 'User Hierarchy', 'user-hierarchy')}>&#128196; PDF</DownloadButton>
                         </div>
-                        {users.filter(u => !u.reportingTo).map(user => <UserNode key={user.id} user={user} allUsers={users} />)}
+                        {users.filter(u => !u.reportingTo).map(user => <UserNode key={user.id} user={user} allUsers={users} level={0} />)}
                     </div>
                 );
             case 'escalation':
