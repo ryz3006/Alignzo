@@ -4,12 +4,14 @@ import { auth, db } from '../../firebase';
 import { signOut } from 'firebase/auth';
 import { collection, doc, getDoc, query, where, getDocs } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
+import { useProject } from '../../contexts/ProjectContext'; // Import project context hook
 import LogoOnly from '../../assets/images/Logo_only.png';
 
 const ProjectSelectionPage = () => {
   const [projects, setProjects] = useState([]);
   const [error, setError] = useState('');
   const { isAppLoading, setIsAppLoading } = useAuth();
+  const { loadProject } = useProject(); // Use context
   const navigate = useNavigate();
   const user = auth.currentUser;
 
@@ -23,16 +25,15 @@ const ProjectSelectionPage = () => {
       setError('');
       setIsAppLoading(true);
       try {
-        // Use a direct 'get' operation with the user's email as the document ID
-        const userDocRef = doc(db, "users", user.email);
-        const userDocSnap = await getDoc(userDocRef);
+        const usersRef = collection(db, "users");
+        const q = query(usersRef, where("email", "==", user.email));
+        const userQuerySnapshot = await getDocs(q);
 
-        if (userDocSnap.exists()) {
-          const userData = userDocSnap.data();
+        if (!userQuerySnapshot.empty) {
+          const userData = userQuerySnapshot.docs[0].data();
           const projectIds = userData.mappedProjects || [];
 
           if (projectIds.length > 0) {
-            // Fetch each project document individually using getDoc
             const projectPromises = projectIds.map(id => getDoc(doc(db, "projects", id)));
             const projectSnapshots = await Promise.all(projectPromises);
             
@@ -59,8 +60,8 @@ const ProjectSelectionPage = () => {
     fetchUserAndProjects();
   }, [user, navigate, setIsAppLoading]);
 
-  const selectProject = (projectId) => {
-    sessionStorage.setItem('selectedProject', projectId);
+  const handleSelectProject = async (projectId) => {
+    await loadProject(projectId); // Set project in context
     navigate('/user/dashboard');
   };
 
@@ -72,6 +73,10 @@ const ProjectSelectionPage = () => {
       console.error('Logout error:', error);
     }
   };
+
+  if (isAppLoading) {
+      return null; // The global loader in App.jsx will be shown
+  }
 
   return (
     <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '1rem'}}>
@@ -87,10 +92,10 @@ const ProjectSelectionPage = () => {
         {error && <p style={{color: 'red', textAlign: 'center', marginBottom: '1rem'}}>{error}</p>}
         
         <div style={{flexGrow: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', paddingRight: '1rem'}}>
-            {!isAppLoading && projects.map(project => (
+            {projects.map(project => (
                 <button 
                     key={project.id} 
-                    onClick={() => selectProject(project.id)} 
+                    onClick={() => handleSelectProject(project.id)} 
                     className="btn neumorph-outset"
                     style={{justifyContent: 'space-between', textAlign: 'left'}}
                 >
