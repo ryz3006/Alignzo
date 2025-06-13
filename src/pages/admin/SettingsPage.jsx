@@ -35,8 +35,8 @@ const SettingsPage = () => {
     const { setIsAppLoading } = useAuth();
 
     useEffect(() => {
+        setIsAppLoading(true);
         const fetchSettings = async () => {
-            setIsAppLoading(true);
             try {
                 const { data, error } = await supabase.from('settings').select('id, value');
                 if (error) throw error;
