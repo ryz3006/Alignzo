@@ -1,16 +1,10 @@
-# This workflow deploys your unified Alignzo application to GitHub Pages
-
 name: Deploy Alignzo to GitHub Pages
 
 on:
-  # Runs on pushes targeting the main branch
   push:
     branches: ["main"]
-  
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Allow this job to clone the repo and create a page deployment
 permissions:
   contents: read
   pages: write
@@ -34,16 +28,19 @@ jobs:
       - name: Build application
         run: npm run build
         env:
-          # These secrets are still needed to build the app correctly
+          # Firebase Environment Variables
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
           VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
           VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
 
+          # UPDATED: Add the Supabase secrets to the build environment
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # The build output is now at the root 'dist' folder
           path: ./dist
 
       - name: Deploy to GitHub Pages
