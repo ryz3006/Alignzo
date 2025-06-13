@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
-import { auth } from '../../firebase';
+import { auth } from '../../firebase'; // Keep for password reset
 import { useAuth } from '../../contexts/AuthContext';
 import { updatePassword } from 'firebase/auth';
 
@@ -70,8 +70,7 @@ const SettingsPage = () => {
         const updatedList = [...countries, newCountry];
         const { error } = await supabase
             .from('settings')
-            .update({ value: { list: updatedList } })
-            .eq('id', 'countries');
+            .upsert({ id: 'countries', value: { list: updatedList } });
         
         if (error) {
             showMessage('Failed to add country.');
@@ -109,8 +108,7 @@ const SettingsPage = () => {
         const updatedList = [...designations, newDesignation];
         const { error } = await supabase
             .from('settings')
-            .update({ value: { list: updatedList } })
-            .eq('id', 'designations');
+            .upsert({ id: 'designations', value: { list: updatedList } });
         
         if (error) {
             showMessage('Failed to add designation.');
