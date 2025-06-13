@@ -77,7 +77,7 @@ const SettingsPage = () => {
             showMessage('Failed to add country.');
             console.error(error);
         } else {
-            setCountries(updatedList); // Optimistically update state
+            setCountries(updatedList);
             setNewCountry({ name: '', code: '' });
             showMessage('Country added successfully!');
         }
