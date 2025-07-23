@@ -24,9 +24,9 @@ router.post("/login", async (req, res) => {
     await ensureDefaultAdmin();
     const { rows } = await pool.query("SELECT * FROM admin_users WHERE email = $1", [email]);
     const admin = rows[0];
-    if (!admin) return res.status(401).json({ error: "Invalid credentials" });
+    if (!admin) return res.status(401).json({ error: "No account found for this email" });
     const valid = await bcrypt.compare(password, admin.password_hash);
-    if (!valid) return res.status(401).json({ error: "Invalid credentials" });
+    if (!valid) return res.status(401).json({ error: "Incorrect password" });
     const token = jwt.sign({ adminId: admin.id, email: admin.email }, ADMIN_JWT_SECRET, { expiresIn: "1d" });
     res.json({ token });
   } catch (e) {

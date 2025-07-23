@@ -11,12 +11,15 @@ const createTables = async () => {
         name VARCHAR(255) NOT NULL,
         role VARCHAR(50) DEFAULT 'user',
         manager_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        contact_number VARCHAR(32),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `;
     console.log(usersTableQuery);
     await pool.query(usersTableQuery);
+    // Add contact_number column if not exists
+    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS contact_number VARCHAR(32);`);
     console.log('✅ Users table created successfully');
 
     console.log('Creating projects table...');
@@ -56,13 +59,15 @@ const createTables = async () => {
         id SERIAL PRIMARY KEY,
         project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
         user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-        designation VARCHAR(100),
+        support_level VARCHAR(10),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `;
     console.log(projectMembersTableQuery);
     await pool.query(projectMembersTableQuery);
+    // Add support_level column if not exists
+    await pool.query(`ALTER TABLE project_members ADD COLUMN IF NOT EXISTS support_level VARCHAR(10);`);
     console.log('✅ project_members table created successfully');
 
     console.log('Creating settings table...');

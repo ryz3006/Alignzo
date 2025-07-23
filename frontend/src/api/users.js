@@ -139,4 +139,19 @@ export async function deleteSetting(token, key) {
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Failed to delete setting');
   return data;
+}
+
+// Fetch projects assigned to the current user
+export async function getMyProjects(token, email) {
+  const res = await fetch(`/api/users/my-projects?email=${encodeURIComponent(email)}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    data = {};
+  }
+  if (!res.ok) throw new Error(data.error || "Failed to fetch user projects");
+  return data;
 } 

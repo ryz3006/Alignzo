@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Routes, Route } from "react-router-dom";
 import { useAdminAuth } from "../contexts/AdminAuthContext";
 import { FcGoogle } from "react-icons/fc";
 import { MdMenuBook, MdWbSunny, MdDarkMode } from "react-icons/md";
 import "../neumorphism.css";
 import "./CombinedLoginPage.css";
+import { useLoading } from "../contexts/LoadingContext";
+import { getMyProjects } from "../api/users";
+import ProjectSelectionPage from "./ProjectSelectionPage";
 
-const CombinedLoginPage = ({ setLoading }) => {
+const CombinedLoginPage = () => {
   const navigate = useNavigate();
   const { login: adminLogin } = useAdminAuth();
   const [activeTab, setActiveTab] = useState("user"); // "user" or "admin"
@@ -18,6 +21,9 @@ const CombinedLoginPage = ({ setLoading }) => {
   const [adminError, setAdminError] = useState("");
   const [adminLoading, setAdminLoading] = useState(false);
 
+  // User login state
+  const [userError, setUserError] = useState("");
+
   // Theme state (copied from HeaderBar for consistency)
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem("theme") || "light";
@@ -27,16 +33,39 @@ const CombinedLoginPage = ({ setLoading }) => {
     localStorage.setItem("theme", theme);
   }, [theme]);
 
+  const { setLoading } = useLoading();
+
   const handleGoogleLogin = async () => {
     setLoading(true);
+    setUserError("");
     await new Promise((resolve) => setTimeout(resolve, 1000));
     const auth = getAuth();
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
-      navigate("/user/dashboard");
+      const result = await signInWithPopup(auth, provider);
+      const firebaseUser = result.user;
+      const token = await firebaseUser.getIdToken();
+      const email = firebaseUser.email;
+      // Validate assigned projects
+      try {
+        const { projects } = await getMyProjects(token, email);
+        if (projects && projects.length > 0) {
+          navigate("/user/select-project", { state: { projects, user: { email, name: firebaseUser.displayName } } });
+          setTimeout(() => setLoading(false), 500);
+          return;
+        } else {
+          setUserError(`No projects assigned to this user ${email}, please contact Admin`);
+        }
+      } catch (apiError) {
+        // Try to parse backend error message
+        if (apiError.message && (apiError.message.includes('User not found') || apiError.message.includes('404'))) {
+          setUserError(`No projects assigned to this user ${email}, please contact Admin`);
+        } else {
+          setUserError("Google Sign-In failed: " + apiError.message);
+        }
+      }
     } catch (error) {
-      alert("Google Sign-In failed: " + error.message);
+      setUserError("Google Sign-In failed: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -51,6 +80,8 @@ const CombinedLoginPage = ({ setLoading }) => {
     try {
       await adminLogin(adminEmail, adminPassword);
       navigate("/admin/dashboard");
+      setTimeout(() => setLoading(false), 500);
+      return;
     } catch (error) {
       setAdminError("Invalid credentials. Please try again.");
     } finally {
@@ -128,6 +159,23 @@ const CombinedLoginPage = ({ setLoading }) => {
         {/* User Login Tab */}
         {activeTab === "user" && (
           <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+            {userError && (
+              <div style={{
+                background: "#ffebee",
+                color: "#b00020",
+                borderRadius: 6,
+                padding: "8px 16px",
+                marginBottom: 12,
+                width: "100%",
+                textAlign: "center",
+                fontWeight: 500,
+                fontFamily: "'FK Grotesk', 'Poppins', sans-serif",
+                fontSize: 15,
+                boxShadow: "0 2px 8px #b0002022"
+              }}>
+                {userError}
+              </div>
+            )}
             <button
               className="login-btn"
               onClick={handleGoogleLogin}

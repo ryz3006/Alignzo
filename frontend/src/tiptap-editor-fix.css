@@ -1,0 +1,11 @@
+/* Remove border, outline, and box-shadow from Tiptap editor's contenteditable area */
+.tiptap-editor-root [contenteditable] {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  resize: none !important;
+  min-height: 20px;
+  font-size: 16px;
+  font-family: 'FK Grotesk', 'Poppins', sans-serif;
+} 

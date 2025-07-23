@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { getAuth, signOut } from "firebase/auth";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAdminAuth } from "../../contexts/AdminAuthContext";
+import { useLoading } from "../../contexts/LoadingContext";
 import { 
   MdDashboard, 
   MdTab, 
@@ -13,7 +14,8 @@ import {
   MdExpandLess,
   MdPerson,
   MdSettings,
-  MdNotifications
+  MdNotifications,
+  MdSwapHoriz
 } from "react-icons/md";
 import "../../neumorphism.css";
 import "./HeaderBar.css";
@@ -42,7 +44,8 @@ const PAGE_LABELS = {
 const HeaderBar = ({ onNavChange }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout: adminLogout } = useAdminAuth();
+  const { logout: adminLogout, admin } = useAdminAuth();
+  const { setLoading } = useLoading();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -55,7 +58,8 @@ const HeaderBar = ({ onNavChange }) => {
 
   useEffect(() => {
     // Set selected tab based on path
-    if (location.pathname.includes("projects")) setSelectedTab("projects");
+    if (location.pathname.includes("settings")) setSelectedTab("settings");
+    else if (location.pathname.includes("projects")) setSelectedTab("projects");
     else if (location.pathname.includes("users")) setSelectedTab("users");
     else if (location.pathname.includes("profile")) setSelectedTab("profile");
     else setSelectedTab("dashboard");
@@ -63,28 +67,34 @@ const HeaderBar = ({ onNavChange }) => {
     // eslint-disable-next-line
   }, [location.pathname]);
 
-  const handleNavClick = (item) => {
+  const handleNavClick = async (item) => {
     setSelectedTab(item.key);
-    if (isAdmin) {
-      if (item.key === "dashboard") navigate("/admin/dashboard");
-      else if (item.key === "users") navigate("/admin/users");
-      else if (item.key === "projects") navigate("/admin/projects");
-      else if (item.key === "settings") navigate("/admin/settings");
-    } else {
-      if (item.key === "dashboard") navigate("/user/dashboard");
-      else if (item.key === "projects") alert("My Projects clicked");
-      else if (item.key === "profile") alert("Profile clicked");
-    }
-    if (onNavChange) onNavChange(PAGE_LABELS[item.key] || "Dashboard");
+    setLoading(true);
+    setTimeout(() => {
+      if (isAdmin) {
+        if (item.key === "dashboard") navigate("/admin/dashboard");
+        else if (item.key === "users") navigate("/admin/users");
+        else if (item.key === "projects") navigate("/admin/projects");
+        else if (item.key === "settings") navigate("/admin/settings");
+      } else {
+        if (item.key === "dashboard") navigate("/user/feeds");
+        else if (item.key === "projects") alert("My Projects clicked");
+        else if (item.key === "profile") alert("Profile clicked");
+      }
+      setLoading(false);
+      if (onNavChange) onNavChange(PAGE_LABELS[item.key] || "Dashboard");
+    }, 300);
   };
 
   const handleLogout = async () => {
+    setLoading(true);
     if (location.pathname.includes('/admin')) {
       adminLogout();
     } else {
       await signOut(getAuth());
     }
     navigate("/login");
+    setTimeout(() => setLoading(false), 500);
   };
 
   // THEME TOGGLE LOGIC
@@ -184,11 +194,23 @@ const HeaderBar = ({ onNavChange }) => {
           </button>
           {showDropdown && (
             <div className="user-dropdown">
-              <button className="dropdown-item" onClick={() => alert("Notifications page coming soon")}> <MdNotifications className="dropdown-icon" /> <span>Notifications</span> </button>
-              <button className="dropdown-item" onClick={() => alert("Profile clicked")}> <MdPerson className="dropdown-icon" /> <span>Profile</span> </button>
-              <button className="dropdown-item" onClick={() => alert("Settings clicked")}> <MdSettings className="dropdown-icon" /> <span>Settings</span> </button>
-              <div className="dropdown-divider"></div>
-              <button className="dropdown-item logout" onClick={handleLogout}> <MdLogout className="dropdown-icon" /> <span>Logout</span> </button>
+              {isAdmin ? (
+                <>
+                  <div style={{ padding: '8px 16px', fontWeight: 600, fontFamily: "'FK Grotesk', Arial, sans-serif", color: 'var(--primary-color)', fontSize: 15, borderBottom: '1px solid #eee' }}>
+                    {admin && admin.email ? admin.email : 'Admin'}
+                  </div>
+                  <button className="dropdown-item logout" onClick={handleLogout}> <MdLogout className="dropdown-icon" /> <span>Logout</span> </button>
+                </>
+              ) : (
+                <>
+                  <button className="dropdown-item" onClick={() => alert("Notifications page coming soon")}> <MdNotifications className="dropdown-icon" /> <span>Notifications</span> </button>
+                  <button className="dropdown-item" onClick={() => alert("Profile clicked")}> <MdPerson className="dropdown-icon" /> <span>Profile</span> </button>
+                  <button className="dropdown-item" onClick={() => alert("Settings clicked")}> <MdSettings className="dropdown-icon" /> <span>Settings</span> </button>
+                  <button className="dropdown-item" onClick={() => { setShowDropdown(false); setLoading(true); navigate("/user/select-project"); setTimeout(() => setLoading(false), 500); }}> <MdSwapHoriz className="dropdown-icon" /> <span>Switch Project</span> </button>
+                  <div className="dropdown-divider"></div>
+                  <button className="dropdown-item logout" onClick={handleLogout}> <MdLogout className="dropdown-icon" /> <span>Logout</span> </button>
+                </>
+              )}
             </div>
           )}
         </div>

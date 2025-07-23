@@ -10,18 +10,43 @@ import userRoutes from "./routes/users.js";
 import projectRoutes from "./routes/projects.js";
 import adminAuthRoutes from "./routes/adminAuth.js";
 import adminDashboardRoutes from "./routes/adminDashboard.js";
+import uploadRouter from './routes/upload.js';
+import postsRouter from './routes/posts.js';
+import path from 'path';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(helmet());
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+// In development, relax rate limiting for login endpoint only
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // allow 1000 requests per 15 min in dev
+  message: 'Too many login attempts, please try again later.'
+});
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/api/admin/login', loginLimiter);
+} else {
+  // In production, you may want to use a stricter limiter globally
+  app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
+}
 app.disable('x-powered-by');
 
+// Set CORS header for all responses (including static files)
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  next();
+});
 app.use("/api/users", userRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/admin", adminAuthRoutes);
 app.use("/api/admin/dashboard", adminDashboardRoutes);
+app.use('/api/upload', uploadRouter);
+app.use('/api/posts', postsRouter);
+// Serve uploads statically WITH CORS
+app.use('/uploads', cors(), express.static(path.join(process.cwd(), 'uploads')));
 
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
