@@ -1,0 +1,23 @@
+.dashboard-card {
+  width: 100%;
+  max-width: 600px;
+  margin: 40px 0 0 0; /* Remove left margin */
+  text-align: left;
+  background: var(--secondary-bg, var(--primary-bg)); /* Optional: for card background */
+}
+
+@media (max-width: 900px) {
+  .dashboard-card {
+    max-width: 98vw;
+    margin: 24px 0 0 0;
+    padding: 1rem 0.5rem 1rem 64px;
+  }
+}
+
+@media (max-width: 700px) {
+  .dashboard-card {
+    max-width: 100vw;
+    margin: 16px 0 0 0;
+    padding: 1rem 0.25rem 1rem 64px;
+  }
+} 

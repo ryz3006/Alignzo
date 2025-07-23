@@ -1,8 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap');
+
+body, html, #root, * {
+  font-family: 'Poppins', sans-serif !important;
+}
+
+html, body, #root {
+  height: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+  margin: 0 !important;
+}
+
+body, html {
+  display: block !important;
+  place-items: initial !important;
+}
+
+.header-bar {
+  z-index: 99999 !important;
+}
+
+.app-layout, #root, body, html {
+  position: static !important;
+  overflow: visible !important;
+}
+
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  padding: 0;
 }
 
 .logo {
@@ -39,4 +63,37 @@
 
 .read-the-docs {
   color: #888;
+}
+
+.login-btn {
+  transition: transform 0.15s cubic-bezier(0.4, 0.2, 0.2, 1), box-shadow 0.15s cubic-bezier(0.4, 0.2, 0.2, 1);
+}
+.login-btn:hover:not(:disabled), .login-btn:focus-visible:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px #a3b1c644;
+  z-index: 1;
+}
+
+/* App Layout Styles */
+.app-layout {
+  min-height: 100vh;
+  background: var(--primary-bg, #f5f5f5);
+}
+
+.app-main-content {
+  padding-top: 70px; /* Account for fixed header */
+  min-height: calc(100vh - 70px);
+  transition: padding-top 0.3s cubic-bezier(0.4, 0.2, 0.2, 1);
+}
+
+/* When header is scrolled (minimized), adjust padding */
+body.header-scrolled .app-main-content {
+  padding-top: 60px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .app-main-content {
+    padding-top: 60px;
+  }
 }

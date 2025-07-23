@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from "react";
+import { API_BASE_URL } from "../config.js";
 
 const AdminAuthContext = createContext();
 
@@ -7,7 +8,7 @@ export const AdminAuthProvider = ({ children }) => {
   const [admin, setAdmin] = useState(null);
 
   const login = async (email, password) => {
-    const res = await fetch("/api/admin/login", {
+    const res = await fetch(`${API_BASE_URL}/admin/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),

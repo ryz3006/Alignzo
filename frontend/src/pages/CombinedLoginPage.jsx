@@ -1,24 +1,235 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
+import { useAdminAuth } from "../contexts/AdminAuthContext";
+import { FcGoogle } from "react-icons/fc";
+import { MdMenuBook, MdWbSunny, MdDarkMode } from "react-icons/md";
+import "../neumorphism.css";
+import "./CombinedLoginPage.css";
 
-const handleGoogleLogin = () => {
-  alert("Google Sign-In would be triggered here (Firebase Auth)");
-};
+const CombinedLoginPage = ({ setLoading }) => {
+  const navigate = useNavigate();
+  const { login: adminLogin } = useAdminAuth();
+  const [activeTab, setActiveTab] = useState("user"); // "user" or "admin"
 
-const CombinedLoginPage = () => (
-  <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#e0e5ec" }}>
-    <div style={{ background: "#fff", padding: 32, borderRadius: 12, boxShadow: "0 4px 24px #a3b1c6", minWidth: 320 }}>
-      <h2 style={{ marginBottom: 24, textAlign: "center" }}>User Login</h2>
-      <button
-        onClick={handleGoogleLogin}
-        style={{ width: "100%", padding: 10, borderRadius: 6, background: "#4285F4", color: "#fff", border: "none", fontWeight: "bold", cursor: "pointer", marginBottom: 16 }}
-      >
-        Sign in with Google
-      </button>
-      <div style={{ textAlign: "center", color: "#888" }}>
-        (Firebase Google Auth)
+  // Admin login state
+  const [adminEmail, setAdminEmail] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
+  const [adminError, setAdminError] = useState("");
+  const [adminLoading, setAdminLoading] = useState(false);
+
+  // Theme state (copied from HeaderBar for consistency)
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem("theme") || "light";
+  });
+  useEffect(() => {
+    document.body.classList.toggle("theme-dark", theme === "dark");
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const auth = getAuth();
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      navigate("/user/dashboard");
+    } catch (error) {
+      alert("Google Sign-In failed: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAdminLogin = async (e) => {
+    e.preventDefault();
+    setAdminError("");
+    setAdminLoading(true);
+    setLoading(true);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      await adminLogin(adminEmail, adminPassword);
+      navigate("/admin/dashboard");
+    } catch (error) {
+      setAdminError("Invalid credentials. Please try again.");
+    } finally {
+      setAdminLoading(false);
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="login-bg" style={{ width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "var(--primary-bg)", position: "relative" }}>
+      {/* Theme toggle at top right */}
+      <div className="login-theme-toggle" style={{ position: "absolute", top: 18, right: 18, zIndex: 2, display: "flex", alignItems: "center" }}>
+        <input
+          type="checkbox"
+          className="theme-checkbox"
+          id="theme-checkbox-login"
+          checked={theme === "dark"}
+          onChange={() => setTheme(theme === "dark" ? "light" : "dark")}
+          style={{ display: "none" }}
+        />
+        <label htmlFor="theme-checkbox-login" className={`theme-checkbox-label${theme === "dark" ? " dark" : ""}`} title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} style={{ cursor: "pointer" }}>
+          <span className="theme-ball">
+            {theme === "dark" ? <MdDarkMode className="theme-ball-icon" /> : <MdWbSunny className="theme-ball-icon" />}
+          </span>
+        </label>
+      </div>
+      {/* Centered logo above card */}
+      <div className="login-logo-row" style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 18 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+          <MdMenuBook className="logo-icon login-logo-icon" style={{ width: 40, height: 40 }} />
+          <span className="logo-text login-logo-text" style={{ fontFamily: "'FK Grotesk', 'Poppins', sans-serif", fontWeight: 700, fontSize: 24, color: "#a3b1c6", letterSpacing: 1 }}>Alignzo</span>
+        </div>
+      </div>
+      <div className="neumorphic login-card" style={{ maxWidth: 400, width: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", boxSizing: "border-box", padding: 32 }}>
+        {/* Tab Navigation */}
+        <div className="login-tabs" style={{ display: "flex", marginBottom: 32, gap: 12, width: "100%", justifyContent: "center" }}>
+          <button
+            onClick={() => setActiveTab("user")}
+            style={{
+              flex: 1,
+              padding: "12px 16px",
+              border: activeTab === "user" ? "2px solid #a3b1c6" : "none",
+              background: activeTab === "user" ? "#f5f8ff" : "#e9eef6",
+              color: activeTab === "user" ? "#222" : "#666",
+              cursor: "pointer",
+              fontWeight: activeTab === "user" ? "bold" : "normal",
+              borderRadius: "12px 0 0 12px",
+              outline: "none",
+              boxShadow: activeTab === "user" ? "0 2px 8px #a3b1c633" : "none",
+              transition: "all 0.2s"
+            }}
+          >
+            User Login
+          </button>
+          <button
+            onClick={() => setActiveTab("admin")}
+            style={{
+              flex: 1,
+              padding: "12px 16px",
+              border: activeTab === "admin" ? "2px solid #a3b1c6" : "none",
+              background: activeTab === "admin" ? "#f5f8ff" : "#e9eef6",
+              color: activeTab === "admin" ? "#222" : "#666",
+              cursor: "pointer",
+              fontWeight: activeTab === "admin" ? "bold" : "normal",
+              borderRadius: "0 12px 12px 0",
+              outline: "none",
+              boxShadow: activeTab === "admin" ? "0 2px 8px #a3b1c633" : "none",
+              transition: "all 0.2s"
+            }}
+          >
+            Admin Login
+          </button>
+        </div>
+
+        {/* User Login Tab */}
+        {activeTab === "user" && (
+          <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <button
+              className="login-btn"
+              onClick={handleGoogleLogin}
+              style={{
+                width: "100%",
+                padding: "12px 0",
+                marginBottom: 8,
+                background: "#4285f4",
+                color: "#fff",
+                border: "none",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontSize: "16px",
+                fontWeight: "bold",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 10
+              }}
+            >
+              <FcGoogle size={22} style={{ background: "#fff", borderRadius: "50%", marginRight: 8 }} />
+              Sign in with Google
+            </button>
+          </div>
+        )}
+
+        {/* Admin Login Tab */}
+        {activeTab === "admin" && (
+          <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <form onSubmit={handleAdminLogin} style={{ width: "100%" }}>
+              <div style={{ marginBottom: 16 }}>
+                <label htmlFor="adminEmail" style={{ display: "block", marginBottom: 4, fontWeight: "bold" }}>
+                  Email
+                </label>
+                <input
+                  id="adminEmail"
+                  type="email"
+                  value={adminEmail}
+                  onChange={(e) => setAdminEmail(e.target.value)}
+                  required
+                  style={{
+                    width: "100%",
+                    padding: "12px 16px",
+                    borderRadius: "6px",
+                    border: "1px solid #ccc",
+                    fontSize: "16px",
+                    boxSizing: "border-box"
+                  }}
+                  placeholder="email id"
+                  autoFocus
+                />
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <label htmlFor="adminPassword" style={{ display: "block", marginBottom: 4, fontWeight: "bold" }}>
+                  Password
+                </label>
+                <input
+                  id="adminPassword"
+                  type="password"
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  required
+                  style={{
+                    width: "100%",
+                    padding: "12px 16px",
+                    borderRadius: "6px",
+                    border: "1px solid #ccc",
+                    fontSize: "16px",
+                    boxSizing: "border-box"
+                  }}
+                  placeholder="Enter password"
+                />
+              </div>
+              {adminError && (
+                <div style={{ color: "#b00020", marginBottom: 12, textAlign: "center", fontSize: "14px" }}>
+                  {adminError}
+                </div>
+              )}
+              <button
+                className="login-btn"
+                type="submit"
+                disabled={adminLoading}
+                style={{
+                  width: "100%",
+                  padding: "12px 0",
+                  borderRadius: "6px",
+                  background: adminLoading ? "#ccc" : "#a3b1c6",
+                  color: "#fff",
+                  border: "none",
+                  fontWeight: "bold",
+                  cursor: adminLoading ? "not-allowed" : "pointer",
+                  fontSize: "16px"
+                }}
+              >
+                {adminLoading ? "Logging in..." : "Login as Admin"}
+              </button>
+            </form>
+          </div>
+        )}
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default CombinedLoginPage; 

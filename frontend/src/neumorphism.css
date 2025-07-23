@@ -1,0 +1,75 @@
+:root {
+  --primary-bg: #e0e5ec;
+  --primary-shadow: #a3b1c6;
+  --primary-highlight: #ffffff;
+  --primary-color: #333;
+  --accent: #a3b1c6;
+  --radius: 18px;
+}
+
+.theme-dark {
+  --primary-bg: #23272f;
+  --primary-shadow: #181a20;
+  --primary-highlight: #313543;
+  --primary-color: #f1f1f1;
+  --accent: #4f5b93;
+  --radius: 18px;
+}
+
+body {
+  background: var(--primary-bg);
+  color: var(--primary-color);
+  font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+  margin: 0;
+  min-height: 100vh;
+}
+
+.neumorphic {
+  background: var(--primary-bg);
+  border-radius: var(--radius);
+  box-shadow: 8px 8px 16px var(--primary-shadow),
+              -8px -8px 16px var(--primary-highlight);
+  padding: 2rem 1.5rem;
+  transition: box-shadow 0.2s, background 0.2s, color 0.2s;
+}
+
+input, button {
+  font-family: inherit;
+  border-radius: var(--radius);
+  border: none;
+  outline: none;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 2px 2px 6px var(--primary-shadow),
+              -2px -2px 6px var(--primary-highlight);
+  background: var(--primary-bg);
+  color: var(--primary-color);
+  font-size: 1rem;
+}
+
+button {
+  background: var(--accent);
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+button:hover {
+  background: #7e8fa3;
+}
+
+@media (max-width: 700px) {
+  .neumorphic {
+    padding: 1rem 0.5rem;
+  }
+  .sidebar {
+    width: 100vw !important;
+    min-width: unset !important;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 1000;
+    height: 100vh;
+    box-shadow: 4px 0 16px var(--primary-shadow);
+  }
+} 

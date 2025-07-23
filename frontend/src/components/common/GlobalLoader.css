@@ -1,0 +1,32 @@
+/* Global loading overlay styles */
+.global-loader-overlay {
+  position: fixed;
+  z-index: 99999;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(255,255,255,0.7); /* Use a dark background for dark mode if needed */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s;
+}
+
+.loader {
+  width: 45px;
+  aspect-ratio: 1;
+  --c:no-repeat linear-gradient(#000 0 0);
+  background: 
+    var(--c) 0    0,
+    var(--c) 0    100%, 
+    var(--c) 50%  50%,   
+    var(--c) 100% 0, 
+    var(--c) 100% 100%;
+  animation: l13 1s infinite alternate;
+}
+
+@keyframes l13 {
+  0%,10%   {background-size:20% 100%}
+  50%      {background-size:20%  20%}
+  90%,100% {background-size:100% 20%}
+} 

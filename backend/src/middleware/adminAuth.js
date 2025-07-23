@@ -7,7 +7,7 @@ export default function (req, res, next) {
     const decoded = jwt.verify(token, process.env.ADMIN_JWT_SECRET);
     req.admin = decoded;
     next();
-  } catch {
+  } catch (e) {
     res.status(401).json({ error: "Invalid admin token" });
   }
 } 
