@@ -416,8 +416,8 @@
   .nav-item {
     font-size: 1rem;
     padding: 0 2px;
-    height: 24px;
-    width: 24px;
+    height: 28px;
+    width: 28px;
     align-items: center;
     vertical-align: middle;
   }
@@ -460,6 +460,11 @@
     padding-top: 44px !important;
   }
   /* --- ADDED: Shrinking rules for mobile header --- */
+  .header-bar.shrunk {
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 0 6px !important;
+  }
   .header-bar.shrunk .nav-item {
     font-size: 0.85rem;
     height: 20px;
@@ -637,29 +642,6 @@ body, #root, .app-layout {
     padding: 0 32px;
   }
   .nav-item, .user-menu-btn {
-    width: 44px;
-    height: 44px;
-    font-size: 1.5rem;
-  }
-  .nav-item svg, .user-menu-btn svg {
-    width: 28px;
-    height: 28px;
-  }
-  .logo-icon {
-    width: 40px !important;
-    height: 40px !important;
-  }
-  .logo-text {
-    font-size: 1.3rem;
-  }
-}
-
-@media (min-width: 1200px) {
-  .header-bar {
-    height: 76px;
-    padding: 0 40px;
-  }
-  .nav-item, .user-menu-btn {
     width: 52px;
     height: 52px;
     font-size: 1.7rem;
@@ -674,6 +656,27 @@ body, #root, .app-layout {
   }
   .logo-text {
     font-size: 1.5rem;
+  }
+}
+
+/* Shrink icons and buttons on scroll for desktop */
+@media (min-width: 992px) {
+  .header-bar.shrunk .nav-item, .header-bar.shrunk .user-menu-btn {
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 1.1rem !important;
+  }
+  .header-bar.shrunk .nav-item svg, .header-bar.shrunk .user-menu-btn svg {
+    width: 26px !important;
+    height: 26px !important;
+  }
+  .header-bar.shrunk .logo-icon {
+    width: 32px !important;
+    height: 32px !important;
+    transform: scale(0.8);
+  }
+  .header-bar.shrunk .logo-text {
+    font-size: 1.1rem !important;
   }
 }
 

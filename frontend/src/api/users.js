@@ -1,5 +1,7 @@
-export async function getCurrentUser(token) {
-  const res = await fetch("/api/users/me", {
+export async function getCurrentUser(token, email) {
+  let url = "/api/users/me";
+  if (email) url += `?email=${encodeURIComponent(email)}`;
+  const res = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` }
   });
   if (!res.ok) throw new Error("Not authorized");
@@ -54,9 +56,10 @@ export async function exportReport(token, type, format = 'excel', projectId = nu
   return res;
 }
 
-// List users with search and pagination
-export async function listUsers(token, { search = '', page = 1, limit = 10 } = {}) {
+// List users with search and pagination (admin dashboard version)
+export async function listUsers(token, { search = '', page = 1, limit = 10, projectId = null } = {}) {
   const params = new URLSearchParams({ search, page, limit });
+  if (projectId) params.append('projectId', projectId);
   const res = await fetch(`/api/admin/dashboard/users?${params}`, {
     headers: { 'Authorization': `Bearer ${token}` },
   });
@@ -154,4 +157,25 @@ export async function getMyProjects(token, email) {
   }
   if (!res.ok) throw new Error(data.error || "Failed to fetch user projects");
   return data;
+}
+
+// Fetch project members for a project (user-accessible)
+export async function fetchProjectMembers(token, projectId) {
+  const res = await fetch(`/api/users/project-members?projectId=${projectId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to fetch project members');
+  return res.json();
+}
+
+// For regular user search (tagging, rating, etc.)
+export async function searchUsers(token, { search = '', projectId = null } = {}) {
+  if (!search || search.length < 2) return { users: [] };
+  const params = new URLSearchParams({ search });
+  if (projectId) params.append('projectId', projectId);
+  const res = await fetch(`/api/users?${params}`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to search users');
+  return res.json();
 } 

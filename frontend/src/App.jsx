@@ -19,6 +19,7 @@ import { LoadingProvider } from "./contexts/LoadingContext";
 import { SettingsProvider } from "./contexts/SettingsContext";
 import ProjectSelectionPage from "./pages/ProjectSelectionPage";
 import FeedsPage from "./pages/FeedsPage";
+import UserFeeds from "./pages/admin/UserFeeds";
 
 function App() {
   return (
@@ -67,6 +68,16 @@ function App() {
                     <AdminProtectedRoute>
                       <AppLayout>
                         <SettingsManagement />
+                      </AppLayout>
+                    </AdminProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/user-feeds"
+                  element={
+                    <AdminProtectedRoute>
+                      <AppLayout>
+                        <UserFeeds />
                       </AppLayout>
                     </AdminProtectedRoute>
                   }

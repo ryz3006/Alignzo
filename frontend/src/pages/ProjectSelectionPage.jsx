@@ -54,7 +54,11 @@ const ProjectSelectionPage = () => {
   const handleContinue = () => {
     if (selectedProject) {
       setLoading(true);
+      // ✅ FIX: Use loose equality (==) to match string from <select> with number/string ID
+      const selectedProjectObj = projects.find(p => p.id == selectedProject);
+      
       localStorage.setItem("selectedProjectId", selectedProject);
+      localStorage.setItem("selectedProjectName", selectedProjectObj ? selectedProjectObj.name : "");
       navigate("/user/feeds", { state: { projectId: selectedProject } });
       setTimeout(() => setLoading(false), 500);
     }

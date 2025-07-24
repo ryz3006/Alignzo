@@ -5,7 +5,8 @@ import { getCurrentUser } from "../api/users";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(null); // Firebase user
+  const [backendUser, setBackendUser] = useState(null); // Backend user (with numeric id)
   const [isAdmin, setIsAdmin] = useState(false);
   const [isAppLoading, setIsAppLoading] = useState(true);
 
@@ -16,12 +17,15 @@ export const AuthProvider = ({ children }) => {
       if (firebaseUser) {
         try {
           const token = await firebaseUser.getIdToken();
-          const backendUser = await getCurrentUser(token);
+          const backendUser = await getCurrentUser(token, firebaseUser.email); // pass email for fallback
+          setBackendUser(backendUser);
           setIsAdmin(backendUser.isAdmin || false);
         } catch {
+          setBackendUser(null);
           setIsAdmin(false);
         }
       } else {
+        setBackendUser(null);
         setIsAdmin(false);
       }
       setIsAppLoading(false);
@@ -30,7 +34,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isAdmin, isAppLoading, setIsAppLoading }}>
+    <AuthContext.Provider value={{ user, backendUser, isAdmin, isAppLoading, setIsAppLoading }}>
       {children}
     </AuthContext.Provider>
   );

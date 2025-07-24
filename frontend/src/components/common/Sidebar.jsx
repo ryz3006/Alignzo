@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { getAuth, signOut } from "firebase/auth";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAdminAuth } from "../../contexts/AdminAuthContext";
-import { MdDashboard, MdTab, MdLogout, MdWbSunny, MdDarkMode, MdMenuBook, MdChevronLeft, MdChevronRight } from "react-icons/md";
+import { MdDashboard, MdTab, MdLogout, MdWbSunny, MdDarkMode, MdMenuBook, MdChevronLeft, MdChevronRight, MdNotifications } from "react-icons/md";
 import "../../neumorphism.css";
 import "./Sidebar.css";
 
@@ -21,6 +21,7 @@ const Sidebar = () => {
     { label: "Admin Dashboard", icon: <MdDashboard size={24} />, onClick: (navigate) => navigate("/admin/dashboard") },
     { label: "User Management", icon: <MdTab size={24} />, onClick: () => alert("User Management clicked") },
     { label: "Project Management", icon: <MdTab size={24} />, onClick: () => alert("Project Management clicked") },
+    { label: "User Feeds", icon: <MdNotifications size={24} />, onClick: (navigate) => navigate("/admin/user-feeds") },
   ] : [
     { label: "Dashboard", icon: <MdDashboard size={24} />, onClick: (navigate) => navigate("/user/dashboard") },
     { label: "My Projects", icon: <MdTab size={24} />, onClick: () => alert("My Projects clicked") },

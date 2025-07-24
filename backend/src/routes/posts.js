@@ -1,5 +1,6 @@
 import express from 'express';
 import pool from '../db/index.js';
+import adminAuth from '../middleware/adminAuth.js';
 const router = express.Router();
 
 // POST /api/posts - create a new post
@@ -21,16 +22,16 @@ router.post('/', async (req, res) => {
         await pool.query('INSERT INTO post_images (post_id, file_path) VALUES ($1, $2)', [postId, filePath]);
       }
     }
-    // Insert tags
+    // Insert tags (now using user_id)
     if (Array.isArray(tags)) {
-      for (const tagged_email of tags) {
-        await pool.query('INSERT INTO post_tags (post_id, tagged_email) VALUES ($1, $2)', [postId, tagged_email]);
+      for (const user_id of tags) {
+        await pool.query('INSERT INTO post_tags (post_id, user_id) VALUES ($1, $2)', [postId, user_id]);
       }
     }
     res.json({ success: true, postId });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to create post' });
+    res.status(500).json({ error: 'Failed to create post', details: err.message });
   }
 });
 
@@ -38,21 +39,68 @@ router.post('/', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const { projectId } = req.query;
+    console.log('[DEBUG] GET /api/posts - projectId:', projectId);
     if (!projectId) return res.status(400).json({ error: 'Missing projectId' });
     // Fetch posts
     const postsResult = await pool.query('SELECT * FROM posts WHERE project_id = $1 ORDER BY created_at DESC', [projectId]);
     const posts = postsResult.rows;
-    // For each post, fetch images and tags
+    console.log(`[DEBUG] Found ${posts.length} posts for projectId ${projectId}`);
+    if (posts.length > 0) {
+      console.log('[DEBUG] Post IDs:', posts.map(p => p.id));
+    }
+    // For each post, fetch images and tags (now with user details)
     for (const post of posts) {
       const imagesResult = await pool.query('SELECT file_path FROM post_images WHERE post_id = $1', [post.id]);
       post.images = imagesResult.rows.map(r => r.file_path);
-      const tagsResult = await pool.query('SELECT tagged_email FROM post_tags WHERE post_id = $1', [post.id]);
-      post.tags = tagsResult.rows.map(r => r.tagged_email);
+      // Fetch tagged users (join with users table)
+      const tagsResult = await pool.query(
+        `SELECT u.id, u.name, u.email FROM post_tags pt JOIN users u ON pt.user_id = u.id WHERE pt.post_id = $1`,
+        [post.id]
+      );
+      post.tags = tagsResult.rows; // Array of {id, name, email}
+    }
+    res.json({ posts });
+  } catch (err) {
+    console.error('[ERROR] Failed to fetch posts:', err);
+    res.status(500).json({ error: 'Failed to fetch posts' });
+  }
+});
+
+// GET /api/posts/all - fetch all posts from all projects (admin only)
+router.get('/all', adminAuth, async (req, res) => {
+  try {
+    const postsResult = await pool.query('SELECT * FROM posts ORDER BY created_at DESC');
+    const posts = postsResult.rows;
+    for (const post of posts) {
+      const imagesResult = await pool.query('SELECT file_path FROM post_images WHERE post_id = $1', [post.id]);
+      post.images = imagesResult.rows.map(r => r.file_path);
+      const tagsResult = await pool.query(
+        `SELECT u.id, u.name, u.email FROM post_tags pt JOIN users u ON pt.user_id = u.id WHERE pt.post_id = $1`,
+        [post.id]
+      );
+      post.tags = tagsResult.rows;
     }
     res.json({ posts });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to fetch posts' });
+    res.status(500).json({ error: 'Failed to fetch all posts' });
+  }
+});
+
+// DELETE /api/posts/:postId - delete a post (admin only)
+router.delete('/:postId', adminAuth, async (req, res) => {
+  const { postId } = req.params;
+  try {
+    // Delete images and tags first due to FK constraints
+    await pool.query('DELETE FROM post_images WHERE post_id = $1', [postId]);
+    await pool.query('DELETE FROM post_tags WHERE post_id = $1', [postId]);
+    await pool.query('DELETE FROM post_likes WHERE post_id = $1', [postId]);
+    const result = await pool.query('DELETE FROM posts WHERE id = $1', [postId]);
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Post not found' });
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete post' });
   }
 });
 
@@ -111,6 +159,34 @@ router.get('/:postId/likes', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to get like info' });
+  }
+});
+
+// DELETE /api/post_tags/:postId/:userId - remove a tag from a post (admin only)
+router.delete('/post_tags/:postId/:userId', adminAuth, async (req, res) => {
+  const { postId, userId } = req.params;
+  try {
+    const result = await pool.query('DELETE FROM post_tags WHERE post_id = $1 AND user_id = $2', [postId, userId]);
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Tag not found for this post' });
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to remove tag from post' });
+  }
+});
+
+// DELETE /api/post_images/:postId - remove an image from a post (admin only, expects {file_path} in body)
+router.delete('/post_images/:postId', adminAuth, async (req, res) => {
+  const { postId } = req.params;
+  const { file_path } = req.body;
+  if (!file_path) return res.status(400).json({ error: 'Missing file_path' });
+  try {
+    const result = await pool.query('DELETE FROM post_images WHERE post_id = $1 AND file_path = $2', [postId, file_path]);
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Image not found for this post' });
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to remove image from post' });
   }
 });
 

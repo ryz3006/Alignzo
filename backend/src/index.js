@@ -13,6 +13,7 @@ import adminDashboardRoutes from "./routes/adminDashboard.js";
 import uploadRouter from './routes/upload.js';
 import postsRouter from './routes/posts.js';
 import path from 'path';
+import ratingsRouter from './routes/ratings.js';
 
 const app = express();
 app.use(cors());
@@ -45,6 +46,7 @@ app.use("/api/admin", adminAuthRoutes);
 app.use("/api/admin/dashboard", adminDashboardRoutes);
 app.use('/api/upload', uploadRouter);
 app.use('/api/posts', postsRouter);
+app.use('/api/ratings', ratingsRouter);
 // Serve uploads statically WITH CORS
 app.use('/uploads', cors(), express.static(path.join(process.cwd(), 'uploads')));
 
